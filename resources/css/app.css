@@ -2998,9 +2998,9 @@ ul.clean-list {
 .updates-release-row,
 .tenant-update-option {
     display: grid;
-    gap: 12px;
-    padding: 18px 20px;
-    border-radius: 22px;
+    gap: 10px;
+    padding: 14px 18px;
+    border-radius: 20px;
     border: 1px solid rgba(111, 128, 167, 0.18);
     background: linear-gradient(180deg, rgba(17, 28, 56, 0.92), rgba(14, 23, 46, 0.94));
 }
@@ -3020,20 +3020,65 @@ ul.clean-list {
 
 .tenant-update-option {
     cursor: pointer;
+    grid-template-columns: 24px minmax(0, 1fr) 132px;
+    align-items: center;
 }
 
-.tenant-update-option-main {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
+.tenant-update-option-radio {
+    display: grid;
+    justify-items: center;
+    padding-top: 0;
 }
 
-.tenant-update-option-main input[type="radio"] {
-    margin-top: 3px;
+.tenant-update-option-radio input[type="radio"] {
+    margin: 0;
+    width: 15px;
+    height: 15px;
+    accent-color: #7c98ff;
+}
+
+.tenant-update-option-copy {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.tenant-update-option-heading {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+}
+
+.tenant-update-option-heading strong {
+    font-size: 18px;
+    line-height: 1.1;
+    color: var(--app-text);
+}
+
+.tenant-update-option-heading small {
+    margin: 0;
+    color: var(--app-text-soft);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
 }
 
 .tenant-update-option-notes {
-    font-size: 14px;
+    font-size: 13px;
+    margin: 0;
+    color: var(--app-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tenant-update-option-date {
+    color: var(--app-text-soft);
+    font-size: 12px;
+    line-height: 1.35;
+    text-align: right;
+    white-space: nowrap;
 }
 
 @media (max-width: 1180px) {
@@ -3114,6 +3159,16 @@ ul.clean-list {
 
     .admin-signal-row {
         align-items: stretch;
+    }
+
+    .tenant-update-option {
+        grid-template-columns: 24px minmax(0, 1fr);
+    }
+
+    .tenant-update-option-date {
+        grid-column: 2;
+        text-align: left;
+        white-space: normal;
     }
 }
 

@@ -49,7 +49,7 @@ class TenantReleaseController extends Controller
             'releases' => $releases,
             'applyUpdateAction' => $this->tenantRoute($tenant, 'admin.updates.apply'),
             'tenantUpdates' => $tenantUpdates,
-            'currentVersion' => config('app.version', '1.0.0'),
+            'currentVersion' => data_get($tenant->settings, 'release_preferences.preferred_release_version', config('app.version', '1.0.0')),
             'repository' => config('services.github.repository'),
         ]);
     }

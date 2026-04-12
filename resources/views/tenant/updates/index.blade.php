@@ -39,20 +39,26 @@
                     <div class="updates-release-list">
                         @foreach ($releases as $release)
                             <label class="tenant-update-option">
-                                <span class="tenant-update-option-main">
+                                <span class="tenant-update-option-radio">
                                     <input type="radio" name="release_id" value="{{ $release->id }}" @checked((string) old('release_id') === (string) $release->id)>
-                                    <span>
-                                        <strong>{{ $release->version }}</strong>
-                                        <small>{{ $release->github_tag }} · {{ $release->published_at?->format('M d, Y h:i A') ?: 'Published' }}</small>
-                                    </span>
                                 </span>
-                                <span class="tenant-update-option-notes">{{ $release->notes ?: 'No release notes were provided for this version.' }}</span>
+                                <span class="tenant-update-option-copy">
+                                    <span class="tenant-update-option-heading">
+                                        <strong>{{ $release->version }}</strong>
+                                        <small>{{ $release->github_tag }}</small>
+                                    </span>
+                                    <span class="tenant-update-option-notes">{{ \Illuminate\Support\Str::limit($release->notes ?: 'No release notes provided.', 48) }}</span>
+                                </span>
+                                <span class="tenant-update-option-date">
+                                    {{ $release->published_at?->format('M d, Y') ?: 'Published' }}<br>
+                                    {{ $release->published_at?->format('h:i A') }}
+                                </span>
                             </label>
                         @endforeach
                     </div>
 
                     <div class="actions">
-                        <button type="submit">Apply Selected Update</button>
+                        <button type="submit">Apply Update</button>
                     </div>
                 </form>
             @endif
@@ -110,12 +116,21 @@
         @else
             <div class="updates-release-list">
                 @foreach ($tenantUpdates as $update)
+                    @php
+                        $displayError = $update->error_message;
+
+                        if (\Illuminate\Support\Str::contains((string) $displayError, 'ncrypto::CSPRNG(nullptr, 0)')) {
+                            $displayError = 'Node.js failed to start on this Windows machine, so npm/build steps could not run.';
+                        } else {
+                            $displayError = \Illuminate\Support\Str::limit((string) $displayError, 220);
+                        }
+                    @endphp
                     <div class="updates-release-row">
                         <div>
                             <strong>{{ $update->release_version ?: 'Unversioned update' }}</strong>
-                            <p>{{ strtoupper($update->status) }} · {{ $update->created_at?->format('M d, Y h:i A') }}</p>
+                            <p>{{ strtoupper($update->status) }} | {{ $update->created_at?->format('M d, Y h:i A') }}</p>
                             @if ($update->error_message)
-                                <p>{{ $update->error_message }}</p>
+                                <p>{{ $displayError }}</p>
                             @endif
                         </div>
                         <span class="table-badge">{{ strtoupper($update->status) }}</span>

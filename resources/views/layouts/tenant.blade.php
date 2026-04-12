@@ -5,6 +5,7 @@
     $tenantPortalTitle = filled($tenantBranding['portal_title'] ?? null)
         ? $tenantBranding['portal_title']
         : config('app.name', 'University Practicum');
+    $tenantCurrentVersion = data_get($tenant->settings, 'release_preferences.preferred_release_version', config('app.version', '1.0.0'));
     $systemLogo = filled($tenantBranding['logo_path'] ?? null)
         ? asset($tenantBranding['logo_path'])
         : asset('images/logos/logo.jpg');
@@ -136,6 +137,10 @@
                         </div>
 
                         <div class="app-sidebar-footer">
+                            <div class="app-meta-card" style="display: grid;">
+                                <strong>Current Version</strong>
+                                <span>{{ $tenantCurrentVersion }}</span>
+                            </div>
                             <span class="app-nav-label">Account</span>
                             <form method="POST" action="{{ $tenantLogoutAction }}">
                                 @csrf
