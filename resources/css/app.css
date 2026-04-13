@@ -733,7 +733,12 @@ img {
 }
 
 .app-meta-card {
-    display: none;
+    display: grid;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(43, 69, 164, 0.16), rgba(26, 39, 86, 0.18));
+    border: 1px solid rgba(102, 132, 255, 0.2);
 }
 
 .app-meta-card strong,
@@ -2909,7 +2914,7 @@ ul.clean-list {
 .sidebar-collapsed-pref .app-shell .app-meta-card,
 .sidebar-collapsed-pref .app-shell .app-sidebar-footer .app-nav-copy,
 .sidebar-collapsed-pref .app-shell .hide-on-collapse {
-    display: none;
+    display: none !important;
 }
 
 .app-shell.sidebar-collapsed .app-sidebar,

@@ -1,6 +1,7 @@
 ﻿@php
     $embedded = $embedded ?? false;
     $showHeading = $showHeading ?? true;
+    $canEditRequirements = $sectionPermissions['edit'] ?? false;
 @endphp
 
 @unless ($embedded)
@@ -32,10 +33,12 @@
                         <td><span>{{ $requirement->status }}</span></td>
                         <td>{{ $requirement->feedback ?: ($requirement->notes ?: 'No feedback yet') }}</td>
                         <td>
-                            <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=requirements&edit='.$requirement->id }}" title="Edit requirement" aria-label="Edit requirement">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                                <span class="sr-only">Edit</span>
-                            </a>
+                            @if ($canEditRequirements)
+                                <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=requirements&edit='.$requirement->id }}" title="Edit requirement" aria-label="Edit requirement">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    <span class="sr-only">Edit</span>
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

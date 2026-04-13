@@ -5,7 +5,7 @@
     $approvedRequirements = $student->requirements->where('status', 'approved')->count();
     $approvedLogs = $student->hourLogs->where('status', 'approved')->count();
     $remainingHours = max(0, (float) $student->required_hours - (float) $student->completed_hours);
-    $activeApplication = $student->applications->first(fn ($application) => in_array($application->status, ['pending', 'accepted', 'deployed'], true));
+    $activeApplication = $student->applications->first(fn ($application) => in_array($application->status, ['pending', 'accepted'], true));
     $latestApplicationForDocuments = $activeApplication ?: $student->applications->sortByDesc(fn ($application) => $application->applied_at?->timestamp ?? 0)->first();
     $sectionMeta = [
         'applications' => [
@@ -56,51 +56,49 @@
 
         @if ($currentSection === 'applications')
             <div class="dashboard-grid">
-                <article class="dashboard-card">
-                    <div class="section-header">
-                        <div>
-                            <h2>Apply for Internship</h2>
-                            <p>{{ $activeApplication ? 'The form is locked while your active application is still under review.' : 'Submit your preferred internship placement and supporting files here.' }}</p>
-                        </div>
-                        <span class="status-pill">{{ $activeApplication ? 'LOCKED' : 'OPEN' }}</span>
-                    </div>
-
-                    @if (! $canSubmitApplications)
-                        <div class="helper-note">
-                            Internship application submission is currently disabled for students in this tenant.
-                        </div>
-                    @elseif ($activeApplication)
-                        <div class="helper-note">
-                            Your current active application is <strong>{{ strtoupper($activeApplication->status) }}</strong> for
-                            {{ $activeApplication->partnerCompany?->name ?: 'your selected organization' }}.
-                        </div>
-                    @else
-                        <form method="POST" action="{{ $studentApplicationAction }}" enctype="multipart/form-data">
-                            @csrf
-                            <div class="form-grid">
-                                <label class="field-span-2">
-                                    Partner Organization
-                                    <select name="partner_company_id" required>
-                                        <option value="">Select an organization</option>
-                                        @foreach ($companies as $company)
-                                            <option value="{{ $company->id }}" @selected((string) old('partner_company_id') === (string) $company->id)>{{ $company->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </label>
-                                <label>Position Applied <input type="text" name="position_applied" value="{{ old('position_applied') }}" placeholder="IT Support, Lab Assistant, Accounting Intern" required></label>
-                                <label class="field-span-2">Student Notes <textarea name="student_notes" placeholder="Preferred schedule, availability, or application remarks">{{ old('student_notes') }}</textarea></label>
-                                <label>Resume <input type="file" name="resume" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required></label>
-                                <label>Endorsement Letter <input type="file" name="endorsement_letter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
-                                <label>MOA <input type="file" name="moa" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
-                                <label>Clearance <input type="file" name="clearance" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
+                @if ($canSubmitApplications)
+                    <article class="dashboard-card">
+                        <div class="section-header">
+                            <div>
+                                <h2>Apply for Internship</h2>
+                                <p>{{ $activeApplication ? 'The form is locked while your active application is still under review.' : 'Submit your preferred internship placement and supporting files here.' }}</p>
                             </div>
+                            <span class="status-pill">{{ $activeApplication ? 'LOCKED' : 'OPEN' }}</span>
+                        </div>
 
-                            <div class="hero-actions">
-                                <button type="submit">Submit Internship Application</button>
+                        @if ($activeApplication)
+                            <div class="helper-note">
+                                Your current active application is <strong>{{ strtoupper($activeApplication->status) }}</strong> for
+                                {{ $activeApplication->partnerCompany?->name ?: 'your selected organization' }}.
                             </div>
-                        </form>
-                    @endif
-                </article>
+                        @else
+                            <form method="POST" action="{{ $studentApplicationAction }}" enctype="multipart/form-data">
+                                @csrf
+                                <div class="form-grid">
+                                    <label class="field-span-2">
+                                        Partner Organization
+                                        <select name="partner_company_id" required>
+                                            <option value="">Select an organization</option>
+                                            @foreach ($companies as $company)
+                                                <option value="{{ $company->id }}" @selected((string) old('partner_company_id') === (string) $company->id)>{{ $company->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </label>
+                                    <label>Position Applied <input type="text" name="position_applied" value="{{ old('position_applied') }}" placeholder="IT Support, Lab Assistant, Accounting Intern" required></label>
+                                    <label class="field-span-2">Student Notes <textarea name="student_notes" placeholder="Preferred schedule, availability, or application remarks">{{ old('student_notes') }}</textarea></label>
+                                    <label>Resume <input type="file" name="resume" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required></label>
+                                    <label>Endorsement Letter <input type="file" name="endorsement_letter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
+                                    <label>MOA <input type="file" name="moa" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
+                                    <label>Clearance <input type="file" name="clearance" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
+                                </div>
+
+                                <div class="hero-actions">
+                                    <button type="submit">Submit Internship Application</button>
+                                </div>
+                            </form>
+                        @endif
+                    </article>
+                @endif
 
                 @if ($latestApplicationForDocuments)
                     <article class="dashboard-card">
@@ -214,19 +212,15 @@
             </div>
         @elseif ($currentSection === 'requirements')
             <div class="content-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
-                <article class="dashboard-card">
-                    <div class="section-header">
-                        <div>
-                            <h2>Upload Form or Requirement</h2>
-                            <p>Send documents to your coordinator with clear labels and notes.</p>
+                @if ($canSubmitRequirements)
+                    <article class="dashboard-card">
+                        <div class="section-header">
+                            <div>
+                                <h2>Upload Form or Requirement</h2>
+                                <p>Send documents to your coordinator with clear labels and notes.</p>
+                            </div>
                         </div>
-                    </div>
 
-                    @if (! $canSubmitRequirements)
-                        <div class="helper-note">
-                            Requirement uploads are currently disabled for students in this tenant.
-                        </div>
-                    @else
                         <form method="POST" action="{{ $studentRequirementAction }}" enctype="multipart/form-data">
                             @csrf
                             <label>
@@ -241,8 +235,8 @@
                             <label>File <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required></label>
                             <button type="submit">Upload Document</button>
                         </form>
-                    @endif
-                </article>
+                    </article>
+                @endif
 
                 <article class="dashboard-card">
                     <div class="section-header">

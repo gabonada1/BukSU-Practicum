@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Supervisor;
 use App\Models\TenantAdmin;
 use App\Models\TenantUser;
+use App\Support\Security\RbacMatrix;
 use App\Support\Tenancy\CurrentTenant;
 use App\Support\Tenancy\TenantUploadManager;
 use Illuminate\Contracts\View\View;
@@ -39,6 +40,12 @@ class TenantProfileController extends Controller
         $courses = $role === 'admin'
             ? Course::query()->withCount('students')->orderBy('sort_order')->orderBy('code')->get()
             : collect();
+        $tenantRoleKey = match ($role) {
+            'supervisor' => 'supervisor',
+            'student' => 'student',
+            default => RbacMatrix::TENANT_ADMIN_ROLE,
+        };
+        $tenantPermissions = RbacMatrix::permissionsForRole($tenant, $tenantRoleKey);
 
         return view('tenant.profile.show', [
             'tenant' => $tenant,
@@ -53,6 +60,7 @@ class TenantProfileController extends Controller
             'brandingSettingsAction' => $this->tenantRoute($tenant, 'admin.profile.branding-settings'),
             'courseStoreAction' => $this->tenantRoute($tenant, 'courses.store'),
             'ojtSettingsAction' => $this->tenantRoute($tenant, 'admin.profile.ojt-settings'),
+            'tenantPermissions' => $tenantPermissions,
             'courseActions' => $courses->mapWithKeys(fn (Course $course) => [
                 $course->getKey() => [
                     'update' => $this->tenantRoute($tenant, 'courses.update', ['course' => $course]),

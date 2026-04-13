@@ -59,6 +59,19 @@
     $editingHour = $editing['hours'] ?? null;
     $editingUser = $editing['users'] ?? null;
     $showCreatePanel = ($createSection === $currentSection || $errors->any()) && $currentSection !== 'users';
+    $sectionActionPermissions = [
+        'companies' => ['create' => 'company.manage', 'edit' => 'company.manage'],
+        'supervisors' => ['create' => 'user.create', 'edit' => 'user.update'],
+        'students' => ['create' => 'user.create', 'edit' => 'user.update', 'applications' => 'application.manage'],
+        'users' => ['create' => 'user.create', 'edit' => 'user.update'],
+        'requirements' => ['create' => 'requirement.review', 'edit' => 'requirement.review'],
+        'hours' => ['create' => 'hours.review', 'edit' => 'hours.review'],
+    ];
+    $sectionPermissions = collect($sectionActionPermissions)->mapWithKeys(fn (array $actions, string $sectionKey) => [
+        $sectionKey => collect($actions)->mapWithKeys(fn (string $permission, string $action) => [
+            $action => (bool) ($tenantPermissions[$permission] ?? false),
+        ])->all(),
+    ])->all();
     $showEditPanel = filled(match ($currentSection) {
         'companies' => $editingCompany,
         'supervisors' => $editingSupervisor,
@@ -68,6 +81,8 @@
         'users' => $editingUser,
         default => null,
     });
+    $showCreatePanel = $showCreatePanel && ($sectionPermissions[$currentSection]['create'] ?? false);
+    $showEditPanel = $showEditPanel && ($sectionPermissions[$currentSection]['edit'] ?? false);
     $dashboardBaseUrl = route('tenant.admin.dashboard');
     $baseSectionUrl = $dashboardBaseUrl.'?section='.$currentSection;
     $sectionCreateTitle = $section['create_title'] ?? \Illuminate\Support\Str::singular($section['title']);
@@ -112,7 +127,9 @@
                     @endif
                     <a class="panel-link" href="{{ $rbacIndexUrl }}">RBAC</a>
                 @else
-                    <a class="panel-link" href="{{ $dashboardBaseUrl.'?section='.$currentSection.'&create='.$currentSection }}">Add Record</a>
+                    @if ($sectionPermissions[$currentSection]['create'] ?? false)
+                        <a class="panel-link" href="{{ $dashboardBaseUrl.'?section='.$currentSection.'&create='.$currentSection }}">Add Record</a>
+                    @endif
                 @endif
             </div>
         </div>
@@ -147,10 +164,10 @@
             @endif
 
             <div class="dashboard-card dashboard-table-card">
-                @include($section['table'], ['embedded' => true, 'showHeading' => false])
+                @include($section['table'], ['embedded' => true, 'showHeading' => false, 'sectionPermissions' => $sectionPermissions[$currentSection] ?? []])
             </div>
 
-            @if ($currentSection === 'students' && $selectedStudentForApplications)
+            @if (($sectionPermissions['students']['applications'] ?? false) && $currentSection === 'students' && $selectedStudentForApplications)
                 <div class="dashboard-card dashboard-table-card">
                     <div class="table-header">
                         <div>

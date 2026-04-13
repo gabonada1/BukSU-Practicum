@@ -105,6 +105,15 @@ class RbacMatrix
         return (bool) ($matrix[$permission][$role] ?? false);
     }
 
+    public static function permissionsForRole($tenant, ?string $role): array
+    {
+        return collect(array_keys(self::defaultTenantMatrix()))
+            ->mapWithKeys(fn (string $permission) => [
+                $permission => self::tenantAllows($tenant, $role, $permission),
+            ])
+            ->all();
+    }
+
     public static function normalize(array $matrix, array $roles, array $definitions): array
     {
         $normalized = [];

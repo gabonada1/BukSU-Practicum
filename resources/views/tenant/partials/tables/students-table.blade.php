@@ -1,6 +1,8 @@
 ﻿@php
     $embedded = $embedded ?? false;
     $showHeading = $showHeading ?? true;
+    $canEditStudents = $sectionPermissions['edit'] ?? false;
+    $canViewApplications = $sectionPermissions['applications'] ?? false;
 @endphp
 
 @unless ($embedded)
@@ -24,14 +26,18 @@
                         <td>{{ $student->completed_hours }} / {{ $student->required_hours }}</td>
                         <td>
                             <div class="link-row">
-                                <a class="action-icon-button" href="{{ $dashboardBaseUrl.'?section=students&student_applications='.$student->id }}" title="View student applications" aria-label="View student applications">
-                                    <i class="fa-solid fa-folder-open"></i>
-                                    <span class="sr-only">Applications</span>
-                                </a>
-                                <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=students&edit='.$student->id }}" title="Edit student" aria-label="Edit student">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                    <span class="sr-only">Edit</span>
-                                </a>
+                                @if ($canViewApplications)
+                                    <a class="action-icon-button" href="{{ $dashboardBaseUrl.'?section=students&student_applications='.$student->id }}" title="View student applications" aria-label="View student applications">
+                                        <i class="fa-solid fa-folder-open"></i>
+                                        <span class="sr-only">Applications</span>
+                                    </a>
+                                @endif
+                                @if ($canEditStudents)
+                                    <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=students&edit='.$student->id }}" title="Edit student" aria-label="Edit student">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <span class="sr-only">Edit</span>
+                                    </a>
+                                @endif
                             </div>
                         </td>
                     </tr>

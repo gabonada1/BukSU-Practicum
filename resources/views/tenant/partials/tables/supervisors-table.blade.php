@@ -1,6 +1,7 @@
 ﻿@php
     $embedded = $embedded ?? false;
     $showHeading = $showHeading ?? true;
+    $canEditSupervisors = $sectionPermissions['edit'] ?? false;
 @endphp
 
 @unless ($embedded)
@@ -23,10 +24,12 @@
                         <td>{{ $supervisor->email }}<br><small>{{ $supervisor->email_verified_at ? 'Verified' : 'Pending verification' }}</small></td>
                         <td><span>{{ ucfirst($supervisor->accountStatusLabel()) }}</span></td>
                         <td>
-                            <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=supervisors&edit='.$supervisor->id }}" title="Edit supervisor" aria-label="Edit supervisor">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                                <span class="sr-only">Edit</span>
-                            </a>
+                            @if ($canEditSupervisors)
+                                <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=supervisors&edit='.$supervisor->id }}" title="Edit supervisor" aria-label="Edit supervisor">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    <span class="sr-only">Edit</span>
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

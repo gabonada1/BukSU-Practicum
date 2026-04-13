@@ -1,6 +1,7 @@
 ﻿@php
     $embedded = $embedded ?? false;
     $showHeading = $showHeading ?? true;
+    $canEditCompanies = $sectionPermissions['edit'] ?? false;
 @endphp
 
 @unless ($embedded)
@@ -33,10 +34,12 @@
                         </td>
                         <td>{{ $company->intern_slot_limit }}</td>
                         <td>
-                            <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=companies&edit='.$company->id }}" title="Edit company" aria-label="Edit company">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                                <span class="sr-only">Edit</span>
-                            </a>
+                            @if ($canEditCompanies)
+                                <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=companies&edit='.$company->id }}" title="Edit company" aria-label="Edit company">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    <span class="sr-only">Edit</span>
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @endforeach

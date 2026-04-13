@@ -1,6 +1,7 @@
 ﻿@php
     $embedded = $embedded ?? false;
     $showHeading = $showHeading ?? true;
+    $canEditUsers = $sectionPermissions['edit'] ?? false;
 @endphp
 
 @unless ($embedded)
@@ -30,10 +31,12 @@
                         </td>
                         <td><span class="table-badge">{{ ucfirst($user['status']) }}</span></td>
                         <td>
-                            <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=users&edit='.$user['key'] }}" title="Edit user" aria-label="Edit user">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                                <span class="sr-only">Edit</span>
-                            </a>
+                            @if ($canEditUsers)
+                                <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=users&edit='.$user['key'] }}" title="Edit user" aria-label="Edit user">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    <span class="sr-only">Edit</span>
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
