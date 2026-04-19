@@ -47,8 +47,11 @@ class TenantDashboardController extends Controller
         $editKey = request()->query('edit');
         $studentApplicationStudentId = (int) request()->query('student_applications');
         $portalTitle = data_get($tenant->settings, 'branding.portal_title', config('app.name', 'University Practicum'));
-        [$actorRole] = $this->currentTenantActor();
-        $tenantPermissions = RbacMatrix::permissionsForRole($tenant, $actorRole);
+        $adminPermissions = collect(array_keys(RbacMatrix::defaultTenantMatrix()))
+            ->mapWithKeys(fn (string $permission) => [
+                $permission => RbacMatrix::tenantAllows($tenant, RbacMatrix::TENANT_ADMIN_ROLE, $permission),
+            ])
+            ->all();
         $selectedStudent = $studentApplicationStudentId > 0
             ? $allStudents->firstWhere('id', $studentApplicationStudentId)
             : null;
@@ -94,6 +97,7 @@ class TenantDashboardController extends Controller
             'selectedStudentApplications' => $selectedStudentApplications,
             'courses' => $courses,
             'supervisors' => $supervisors,
+            'supervisorOptions' => $allSupervisors,
             'requirements' => $requirements,
             'hourLogs' => $hourLogs,
             'ojtSettings' => [
@@ -118,7 +122,7 @@ class TenantDashboardController extends Controller
             'userRoleOptions' => ['admin', 'supervisor', 'student'],
             'formActions' => $this->formActions($tenant),
             'rbacIndexUrl' => route('tenant.admin.rbac.index'),
-            'tenantPermissions' => $tenantPermissions,
+            'tenantPermissions' => $adminPermissions,
         ]);
     }
 

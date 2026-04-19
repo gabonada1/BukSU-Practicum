@@ -22,6 +22,7 @@ class StudentDashboardController extends Controller
 
         $student->load([
             'partnerCompany',
+            'partnerCompany.supervisors',
             'requirements',
             'hourLogs',
             'applications.partnerCompany',
@@ -49,8 +50,10 @@ class StudentDashboardController extends Controller
             'currentSection' => $section,
             'studentApplicationAction' => route('tenant.student.applications.store'),
             'studentRequirementAction' => route('tenant.student.requirements.store'),
+            'studentHourLogAction' => route('tenant.student.hours.store'),
             'canSubmitApplications' => RbacMatrix::tenantAllows($tenant, 'student', 'application.submit'),
             'canSubmitRequirements' => RbacMatrix::tenantAllows($tenant, 'student', 'requirement.submit'),
+            'canSubmitHourLogs' => RbacMatrix::tenantAllows($tenant, 'student', 'hours.submit'),
         ]);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\InteractsWithTenantRouting;
 use App\Mail\StudentRegistrationVerificationMail;
 use App\Mail\TeacherRegistrationVerificationMail;
 use App\Models\Course;
+use App\Models\PartnerCompany;
 use App\Models\Student;
 use App\Models\Supervisor;
 use App\Models\TenantUser;
@@ -43,6 +44,7 @@ class TenantRegistrationController extends Controller
             'pageTitle' => 'Register | '.$portalTitle,
             'selectedRole' => $selectedRole,
             'courses' => Course::active()->get(),
+            'companies' => PartnerCompany::query()->where('is_active', true)->orderBy('name')->get(),
             'ojtSettings' => [
                 'default_ojt_hours' => $tenant->settings['default_ojt_hours'] ?? 486,
                 'allow_student_hour_override' => $tenant->settings['allow_student_hour_override'] ?? false,
@@ -182,6 +184,7 @@ class TenantRegistrationController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:tenant.tenant_users,email'],
+            'partner_company_id' => ['required', 'integer', 'exists:tenant.partner_companies,id'],
             'department' => ['required', 'string', 'max:255'],
             'position' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],

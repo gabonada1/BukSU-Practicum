@@ -110,7 +110,7 @@ class InternshipApplicationController extends Controller
 
         if (InternshipApplication::query()
             ->where('student_id', $student->getKey())
-            ->whereIn('status', ['pending', 'accepted'])
+            ->whereIn('status', ['pending', 'accepted', 'deployed'])
             ->exists()) {
             throw ValidationException::withMessages([
                 'partner_company_id' => 'You already have an active internship application. Wait for the internship coordinator to review it before submitting another one.',

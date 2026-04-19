@@ -57,7 +57,6 @@
     $profileSubtitle = $profileRole === 'admin'
         ? 'Internship Coordinator account for '.$tenant->name
         : ($profileRole === 'supervisor' ? 'Company Supervisor account for '.$tenant->name : 'Student account for '.$tenant->name);
-    $canManageCourses = (bool) ($tenantPermissions['user.update'] ?? false);
 @endphp
 
 @extends('layouts.tenant')
@@ -175,9 +174,7 @@
                 @if ($profileRole === 'admin')
                     <button type="button" class="profile-action-button" data-modal-open="branding-modal">Customize UI</button>
                     <button type="button" class="profile-action-button" data-modal-open="ojt-settings-modal">Edit OJT Settings</button>
-                    @if ($canManageCourses)
-                        <button type="button" class="profile-action-button" data-modal-open="course-create-modal">Add Course</button>
-                    @endif
+                    <button type="button" class="profile-action-button" data-modal-open="course-create-modal">Add Course</button>
                 @endif
             </div>
 
@@ -236,31 +233,29 @@
                                 <td><span class="table-badge">{{ $course->is_active ? 'Active' : 'Inactive' }}</span></td>
                                 <td>
                                     <div class="link-row">
-                                        @if ($canManageCourses)
-                                            <button type="button" class="action-icon-button action-icon-button-secondary" data-modal-open="course-edit-modal-{{ $course->id }}" title="Edit course" aria-label="Edit course">
-                                                <i class="fa-solid fa-pen-to-square"></i>
-                                                <span class="sr-only">Edit</span>
-                                            </button>
+                                        <button type="button" class="action-icon-button action-icon-button-secondary" data-modal-open="course-edit-modal-{{ $course->id }}" title="Edit course" aria-label="Edit course">
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                            <span class="sr-only">Edit</span>
+                                        </button>
 
-                                            @if ($course->students_count === 0)
-                                                <form
-                                                    method="POST"
-                                                    action="{{ $courseActions[$course->id]['destroy'] }}"
-                                                    data-confirm
-                                                    data-confirm-title="Remove course?"
-                                                    data-confirm-message="Remove course {{ $course->code }}?"
-                                                    data-confirm-submit-label="Remove course"
-                                                >
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="action-icon-button action-icon-button-danger" title="Remove course" aria-label="Remove course">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                        <span class="sr-only">Remove</span>
-                                                    </button>
-                                                </form>
-                                            @else
-                                                <span class="metric-pill">Has students</span>
-                                            @endif
+                                        @if ($course->students_count === 0)
+                                            <form
+                                                method="POST"
+                                                action="{{ $courseActions[$course->id]['destroy'] }}"
+                                                data-confirm
+                                                data-confirm-title="Remove course?"
+                                                data-confirm-message="Remove course {{ $course->code }}?"
+                                                data-confirm-submit-label="Remove course"
+                                            >
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="action-icon-button action-icon-button-danger" title="Remove course" aria-label="Remove course">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                    <span class="sr-only">Remove</span>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="metric-pill">Has students</span>
                                         @endif
                                     </div>
                                 </td>
@@ -587,117 +582,115 @@
             </div>
         </div>
 
-        @if ($canManageCourses)
-            <div id="course-create-modal" class="modal-shell" hidden aria-hidden="true">
-                <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="course-create-modal-title">
-                    <div class="modal-header">
-                        <div>
-                            <h3 id="course-create-modal-title">Add New Course</h3>
-                            <p>Create an official program entry for this college so coordinators can assign it directly to students.</p>
-                        </div>
-                        <button type="button" class="modal-close-button" data-modal-close aria-label="Close add course modal">&times;</button>
+        <div id="course-create-modal" class="modal-shell" hidden aria-hidden="true">
+            <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="course-create-modal-title">
+                <div class="modal-header">
+                    <div>
+                        <h3 id="course-create-modal-title">Add New Course</h3>
+                        <p>Create an official program entry for this college so coordinators can assign it directly to students.</p>
+                    </div>
+                    <button type="button" class="modal-close-button" data-modal-close aria-label="Close add course modal">&times;</button>
+                </div>
+
+                <form method="POST" action="{{ $courseStoreAction }}">
+                    @csrf
+                    <input type="hidden" name="form_context" value="course-create">
+
+                    <div class="form-grid">
+                    <label>
+                        Course Code
+                        <input type="text" name="code" value="{{ $courseCreateHasErrors ? old('code') : '' }}" placeholder="e.g. BSIT" maxlength="30" required>
+                        <small>Short identifier such as BSIT, BSCS, or BSCpE.</small>
+                    </label>
+
+                    <label>
+                        Required OJT Hours
+                        <input type="number" name="required_ojt_hours" value="{{ $courseCreateHasErrors ? old('required_ojt_hours', $ojtSettings['default_ojt_hours']) : $ojtSettings['default_ojt_hours'] }}" min="1" max="9999" step="0.5" required>
+                    </label>
+
+                    <label class="field-span-2">
+                        Full Course Name
+                        <input type="text" name="name" value="{{ $courseCreateHasErrors ? old('name') : '' }}" placeholder="e.g. Bachelor of Science in Information Technology" maxlength="255" required>
+                    </label>
+
+                    <label>
+                        Sort Order
+                        <input type="number" name="sort_order" value="{{ $courseCreateHasErrors ? old('sort_order', 0) : 0 }}" min="0">
+                        <small>Lower numbers appear first.</small>
+                    </label>
+
+                    <label class="checkline">
+                        <input type="hidden" name="is_active" value="0">
+                        <input type="checkbox" name="is_active" value="1" {{ (string) old('is_active', '1') === '1' ? 'checked' : '' }}>
+                        Active and selectable for new students
+                    </label>
                     </div>
 
-                    <form method="POST" action="{{ $courseStoreAction }}">
+                    <div class="modal-actions">
+                        <button type="submit">Save Course</button>
+                        <button type="button" class="button secondary" data-modal-close>Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        @foreach ($courses as $course)
+            @php
+                $isEditingCourse = $courseEditHasErrors && (string) $editingCourseId === (string) $course->id;
+                $editCourseIsActive = $isEditingCourse ? old('is_active', (int) $course->is_active) : (int) $course->is_active;
+            @endphp
+            <div id="course-edit-modal-{{ $course->id }}" class="modal-shell" hidden aria-hidden="true">
+                <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="course-edit-modal-title-{{ $course->id }}">
+                    <div class="modal-header">
+                        <div>
+                            <h3 id="course-edit-modal-title-{{ $course->id }}">Edit {{ $course->code }}</h3>
+                            <p>Update the course details and required OJT hours for this official program entry.</p>
+                        </div>
+                        <button type="button" class="modal-close-button" data-modal-close aria-label="Close edit course modal">&times;</button>
+                    </div>
+
+                    <form method="POST" action="{{ $courseActions[$course->id]['update'] }}">
                         @csrf
-                        <input type="hidden" name="form_context" value="course-create">
+                        @method('PATCH')
+                        <input type="hidden" name="form_context" value="course-edit">
+                        <input type="hidden" name="editing_course_id" value="{{ $course->id }}">
 
                         <div class="form-grid">
                         <label>
-                            Course Code
-                            <input type="text" name="code" value="{{ $courseCreateHasErrors ? old('code') : '' }}" placeholder="e.g. BSIT" maxlength="30" required>
-                            <small>Short identifier such as BSIT, BSCS, or BSCpE.</small>
+                            Code
+                            <input type="text" name="code" value="{{ $isEditingCourse ? old('code', $course->code) : $course->code }}" maxlength="30" required>
                         </label>
 
                         <label>
-                            Required OJT Hours
-                            <input type="number" name="required_ojt_hours" value="{{ $courseCreateHasErrors ? old('required_ojt_hours', $ojtSettings['default_ojt_hours']) : $ojtSettings['default_ojt_hours'] }}" min="1" max="9999" step="0.5" required>
+                            OJT Hours
+                            <input type="number" name="required_ojt_hours" value="{{ $isEditingCourse ? old('required_ojt_hours', $course->required_ojt_hours) : $course->required_ojt_hours }}" min="1" max="9999" step="0.5" required>
                         </label>
 
                         <label class="field-span-2">
-                            Full Course Name
-                            <input type="text" name="name" value="{{ $courseCreateHasErrors ? old('name') : '' }}" placeholder="e.g. Bachelor of Science in Information Technology" maxlength="255" required>
+                            Full Name
+                            <input type="text" name="name" value="{{ $isEditingCourse ? old('name', $course->name) : $course->name }}" maxlength="255" required>
                         </label>
 
                         <label>
                             Sort Order
-                            <input type="number" name="sort_order" value="{{ $courseCreateHasErrors ? old('sort_order', 0) : 0 }}" min="0">
-                            <small>Lower numbers appear first.</small>
+                            <input type="number" name="sort_order" value="{{ $isEditingCourse ? old('sort_order', $course->sort_order) : $course->sort_order }}" min="0">
                         </label>
 
                         <label class="checkline">
                             <input type="hidden" name="is_active" value="0">
-                            <input type="checkbox" name="is_active" value="1" {{ (string) old('is_active', '1') === '1' ? 'checked' : '' }}>
-                            Active and selectable for new students
+                            <input type="checkbox" name="is_active" value="1" {{ (string) $editCourseIsActive === '1' ? 'checked' : '' }}>
+                            Active
                         </label>
                         </div>
 
                         <div class="modal-actions">
-                            <button type="submit">Save Course</button>
+                            <button type="submit">Update Course</button>
                             <button type="button" class="button secondary" data-modal-close>Cancel</button>
                         </div>
                     </form>
                 </div>
             </div>
-
-            @foreach ($courses as $course)
-                @php
-                    $isEditingCourse = $courseEditHasErrors && (string) $editingCourseId === (string) $course->id;
-                    $editCourseIsActive = $isEditingCourse ? old('is_active', (int) $course->is_active) : (int) $course->is_active;
-                @endphp
-                <div id="course-edit-modal-{{ $course->id }}" class="modal-shell" hidden aria-hidden="true">
-                    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="course-edit-modal-title-{{ $course->id }}">
-                        <div class="modal-header">
-                            <div>
-                                <h3 id="course-edit-modal-title-{{ $course->id }}">Edit {{ $course->code }}</h3>
-                                <p>Update the course details and required OJT hours for this official program entry.</p>
-                            </div>
-                            <button type="button" class="modal-close-button" data-modal-close aria-label="Close edit course modal">&times;</button>
-                        </div>
-
-                        <form method="POST" action="{{ $courseActions[$course->id]['update'] }}">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="form_context" value="course-edit">
-                            <input type="hidden" name="editing_course_id" value="{{ $course->id }}">
-
-                            <div class="form-grid">
-                            <label>
-                                Code
-                                <input type="text" name="code" value="{{ $isEditingCourse ? old('code', $course->code) : $course->code }}" maxlength="30" required>
-                            </label>
-
-                            <label>
-                                OJT Hours
-                                <input type="number" name="required_ojt_hours" value="{{ $isEditingCourse ? old('required_ojt_hours', $course->required_ojt_hours) : $course->required_ojt_hours }}" min="1" max="9999" step="0.5" required>
-                            </label>
-
-                            <label class="field-span-2">
-                                Full Name
-                                <input type="text" name="name" value="{{ $isEditingCourse ? old('name', $course->name) : $course->name }}" maxlength="255" required>
-                            </label>
-
-                            <label>
-                                Sort Order
-                                <input type="number" name="sort_order" value="{{ $isEditingCourse ? old('sort_order', $course->sort_order) : $course->sort_order }}" min="0">
-                            </label>
-
-                            <label class="checkline">
-                                <input type="hidden" name="is_active" value="0">
-                                <input type="checkbox" name="is_active" value="1" {{ (string) $editCourseIsActive === '1' ? 'checked' : '' }}>
-                                Active
-                            </label>
-                            </div>
-
-                            <div class="modal-actions">
-                                <button type="submit">Update Course</button>
-                                <button type="button" class="button secondary" data-modal-close>Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            @endforeach
-        @endif
+        @endforeach
     @endif
 
     <script>
@@ -865,15 +858,16 @@
                 openProfileModal('ojt-settings-modal');
             }
 
-            if (@json($canManageCourses) && hasCourseCreateErrors) {
+            if (hasCourseCreateErrors) {
                 window.location.hash = 'courses';
                 openProfileModal('course-create-modal');
             }
 
-            if (@json($canManageCourses) && hasCourseEditErrors && editingCourseId) {
+            if (hasCourseEditErrors && editingCourseId) {
                 window.location.hash = 'courses';
                 openProfileModal('course-edit-modal-' + editingCourseId);
             }
         });
     </script>
 @endsection
+

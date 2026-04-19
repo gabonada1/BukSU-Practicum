@@ -118,6 +118,18 @@
                             <div class="form-grid">
                                 <label>Full Name <input type="text" name="name" value="{{ old('name') }}" required></label>
                                 <label>Email <input type="email" name="email" value="{{ old('email') }}" required></label>
+                                <label class="field-span-2">
+                                    Company
+                                    <select name="partner_company_id" required>
+                                        <option value="">Select company</option>
+                                        @foreach ($companies as $company)
+                                            <option value="{{ $company->id }}" @selected((string) old('partner_company_id') === (string) $company->id)>{{ $company->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @if ($companies->isEmpty())
+                                        <small>No active partner companies are available yet. Ask the tenant admin to add one before supervisor registration.</small>
+                                    @endif
+                                </label>
 
                                 @if ($departmentOptions->isNotEmpty())
                                     <label>

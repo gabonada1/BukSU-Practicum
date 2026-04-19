@@ -108,8 +108,7 @@ When Bukidnon State University Administration registers a new university portal 
 | College of Business | COLLEG | PRO | cob.lvh.me, cob, colleg.lvh.me | buksu_college_of_business | Active |
 | College of Nursing | CON | PREMIUM | nursing, con.lvh.me, nursing.lvh.me | buksu_college_of_nursing | Inactive |
 | College of Technology | COT | PREMIUM | cot, cot.lvh.me | buksu_college_of_technology | Active |
-| COTSU | C | PREMIUM | cots, cotsu.localhost | a8789d24a4b3fd63f9bcad6d | Active |
-| NEMSU | N | PRO | nemsu, nemsu.localhost | 5e797d82033d63410648d419 | Active |
+| NEMSU | N | PREMIUM | nemsu, nemsu.localhost | 18a0211aa63774306acaf2ae | Active |
 
 ## 8. Seeded Local Credentials
 

@@ -21,9 +21,8 @@ class PartnerCompanyController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'industry' => ['nullable', 'string', 'max:255'],
-            'available_positions' => ['nullable', 'string', 'max:2500'],
-            'required_documents' => ['nullable', 'array'],
-            'required_documents.*' => ['string', 'max:255'],
+            'available_positions' => ['nullable', 'array'],
+            'available_positions.*' => ['string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
             'contact_person' => ['nullable', 'string', 'max:255'],
             'contact_email' => ['nullable', 'email', 'max:255'],
@@ -31,11 +30,13 @@ class PartnerCompanyController extends Controller
             'intern_slot_limit' => ['required', 'integer', 'min:1'],
         ]);
 
-        $validated['required_documents'] = collect($validated['required_documents'] ?? [])
-            ->map(fn ($document) => trim((string) $document))
+        $validated['available_positions'] = collect($validated['available_positions'] ?? [])
+            ->map(fn ($position) => trim((string) $position))
             ->filter()
             ->unique()
             ->implode(PHP_EOL);
+
+        $validated['required_documents'] = null;
 
         return $validated;
     }

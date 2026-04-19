@@ -83,6 +83,7 @@ $registerTenantRoutes = function (string $namePrefix) use ($loginRoles): void {
         Route::patch('/supervisor/profile', [TenantProfileController::class, 'update'])->defaults('role', 'supervisor')->name("{$namePrefix}supervisor.profile.update");
         Route::put('/supervisor/profile/password', [TenantProfileController::class, 'updatePassword'])->defaults('role', 'supervisor')->name("{$namePrefix}supervisor.profile.password.update");
         Route::get('/supervisor/dashboard', SupervisorDashboardController::class)->name("{$namePrefix}supervisor.dashboard");
+        Route::patch('/supervisor/hours/{hour}', [OjtHourLogController::class, 'reviewSupervisor'])->name("{$namePrefix}supervisor.hours.update");
     });
 
     Route::middleware(['auth:student', 'tenant.account'])->group(function () use ($namePrefix) {
@@ -95,6 +96,7 @@ $registerTenantRoutes = function (string $namePrefix) use ($loginRoles): void {
         Route::get('/student/dashboard', StudentDashboardController::class)->name("{$namePrefix}student.dashboard");
         Route::post('/student/applications', [InternshipApplicationController::class, 'storeStudent'])->name("{$namePrefix}student.applications.store");
         Route::post('/student/requirements', [StudentRequirementController::class, 'storeStudent'])->name("{$namePrefix}student.requirements.store");
+        Route::post('/student/hours', [OjtHourLogController::class, 'storeStudent'])->name("{$namePrefix}student.hours.store");
     });
 };
 

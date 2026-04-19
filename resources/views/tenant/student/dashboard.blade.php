@@ -5,8 +5,9 @@
     $approvedRequirements = $student->requirements->where('status', 'approved')->count();
     $approvedLogs = $student->hourLogs->where('status', 'approved')->count();
     $remainingHours = max(0, (float) $student->required_hours - (float) $student->completed_hours);
-    $activeApplication = $student->applications->first(fn ($application) => in_array($application->status, ['pending', 'accepted'], true));
+    $activeApplication = $student->applications->first(fn ($application) => in_array($application->status, ['pending', 'accepted', 'deployed'], true));
     $latestApplicationForDocuments = $activeApplication ?: $student->applications->sortByDesc(fn ($application) => $application->applied_at?->timestamp ?? 0)->first();
+    $assignedSupervisors = $student->partnerCompany?->supervisors ?? collect();
     $sectionMeta = [
         'applications' => [
             'title' => 'Internship Applications',
@@ -20,8 +21,8 @@
         ],
         'logs' => [
             'title' => 'Progress & Hours',
-            'description' => 'Monitor validated duty hours and review your progress log history.',
-            'pill' => $student->student_number,
+            'description' => 'Submit daily duty logs, monitor validated hours, and review your progress history.',
+            'pill' => number_format($remainingHours, 0).' hrs left',
         ],
     ];
     $activeMeta = $sectionMeta[$currentSection] ?? $sectionMeta['applications'];
@@ -56,49 +57,51 @@
 
         @if ($currentSection === 'applications')
             <div class="dashboard-grid">
-                @if ($canSubmitApplications)
-                    <article class="dashboard-card">
-                        <div class="section-header">
-                            <div>
-                                <h2>Apply for Internship</h2>
-                                <p>{{ $activeApplication ? 'The form is locked while your active application is still under review.' : 'Submit your preferred internship placement and supporting files here.' }}</p>
-                            </div>
-                            <span class="status-pill">{{ $activeApplication ? 'LOCKED' : 'OPEN' }}</span>
+                <article class="dashboard-card">
+                    <div class="section-header">
+                        <div>
+                            <h2>Apply for Internship</h2>
+                            <p>{{ $activeApplication ? 'The form is locked while your active application is still under review.' : 'Submit your preferred internship placement and supporting files here.' }}</p>
                         </div>
+                        <span class="status-pill">{{ $activeApplication ? 'LOCKED' : 'OPEN' }}</span>
+                    </div>
 
-                        @if ($activeApplication)
-                            <div class="helper-note">
-                                Your current active application is <strong>{{ strtoupper($activeApplication->status) }}</strong> for
-                                {{ $activeApplication->partnerCompany?->name ?: 'your selected organization' }}.
+                    @if (! $canSubmitApplications)
+                        <div class="helper-note">
+                            Internship application submission is currently disabled for students in this tenant.
+                        </div>
+                    @elseif ($activeApplication)
+                        <div class="helper-note">
+                            Your current active application is <strong>{{ strtoupper($activeApplication->status) }}</strong> for
+                            {{ $activeApplication->partnerCompany?->name ?: 'your selected organization' }}.
+                        </div>
+                    @else
+                        <form method="POST" action="{{ $studentApplicationAction }}" enctype="multipart/form-data">
+                            @csrf
+                            <div class="form-grid">
+                                <label class="field-span-2">
+                                    Partner Organization
+                                    <select name="partner_company_id" required>
+                                        <option value="">Select an organization</option>
+                                        @foreach ($companies as $company)
+                                            <option value="{{ $company->id }}" @selected((string) old('partner_company_id') === (string) $company->id)>{{ $company->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <label>Position Applied <input type="text" name="position_applied" value="{{ old('position_applied') }}" placeholder="IT Support, Lab Assistant, Accounting Intern" required></label>
+                                <label class="field-span-2">Student Notes <textarea name="student_notes" placeholder="Preferred schedule, availability, or application remarks">{{ old('student_notes') }}</textarea></label>
+                                <label>Resume <input type="file" name="resume" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required></label>
+                                <label>Endorsement Letter <input type="file" name="endorsement_letter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
+                                <label>MOA <input type="file" name="moa" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
+                                <label>Clearance <input type="file" name="clearance" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
                             </div>
-                        @else
-                            <form method="POST" action="{{ $studentApplicationAction }}" enctype="multipart/form-data">
-                                @csrf
-                                <div class="form-grid">
-                                    <label class="field-span-2">
-                                        Partner Organization
-                                        <select name="partner_company_id" required>
-                                            <option value="">Select an organization</option>
-                                            @foreach ($companies as $company)
-                                                <option value="{{ $company->id }}" @selected((string) old('partner_company_id') === (string) $company->id)>{{ $company->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </label>
-                                    <label>Position Applied <input type="text" name="position_applied" value="{{ old('position_applied') }}" placeholder="IT Support, Lab Assistant, Accounting Intern" required></label>
-                                    <label class="field-span-2">Student Notes <textarea name="student_notes" placeholder="Preferred schedule, availability, or application remarks">{{ old('student_notes') }}</textarea></label>
-                                    <label>Resume <input type="file" name="resume" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required></label>
-                                    <label>Endorsement Letter <input type="file" name="endorsement_letter" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
-                                    <label>MOA <input type="file" name="moa" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
-                                    <label>Clearance <input type="file" name="clearance" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"></label>
-                                </div>
 
-                                <div class="hero-actions">
-                                    <button type="submit">Submit Internship Application</button>
-                                </div>
-                            </form>
-                        @endif
-                    </article>
-                @endif
+                            <div class="hero-actions">
+                                <button type="submit">Submit Internship Application</button>
+                            </div>
+                        </form>
+                    @endif
+                </article>
 
                 @if ($latestApplicationForDocuments)
                     <article class="dashboard-card">
@@ -212,15 +215,19 @@
             </div>
         @elseif ($currentSection === 'requirements')
             <div class="content-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
-                @if ($canSubmitRequirements)
-                    <article class="dashboard-card">
-                        <div class="section-header">
-                            <div>
-                                <h2>Upload Form or Requirement</h2>
-                                <p>Send documents to your coordinator with clear labels and notes.</p>
-                            </div>
+                <article class="dashboard-card">
+                    <div class="section-header">
+                        <div>
+                            <h2>Upload Form or Requirement</h2>
+                            <p>Send documents to your coordinator with clear labels and notes.</p>
                         </div>
+                    </div>
 
+                    @if (! $canSubmitRequirements)
+                        <div class="helper-note">
+                            Requirement uploads are currently disabled for students in this tenant.
+                        </div>
+                    @else
                         <form method="POST" action="{{ $studentRequirementAction }}" enctype="multipart/form-data">
                             @csrf
                             <label>
@@ -235,8 +242,8 @@
                             <label>File <input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" required></label>
                             <button type="submit">Upload Document</button>
                         </form>
-                    </article>
-                @endif
+                    @endif
+                </article>
 
                 <article class="dashboard-card">
                     <div class="section-header">
@@ -269,32 +276,102 @@
                 </article>
             </div>
         @else
-            @if ($student->hourLogs->isEmpty())
-                <p>No progress or hour logs yet.</p>
-            @else
-                <div class="table-wrap">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Hours</th>
-                                <th>Status</th>
-                                <th>Activity</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($student->hourLogs as $log)
-                                <tr>
-                                    <td>{{ $log->log_date?->format('M d, Y') }}</td>
-                                    <td>{{ $log->hours }}</td>
-                                    <td><span class="table-badge">{{ strtoupper($log->status) }}</span></td>
-                                    <td>{{ $log->activity }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
+            <div class="content-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+                <article class="dashboard-card">
+                    <div class="section-header">
+                        <div>
+                            <h2>Log OJT Hours</h2>
+                            <p>Send your completed duty hours for review by your supervisor or internship coordinator.</p>
+                        </div>
+                        <span class="status-pill">{{ number_format($student->completed_hours, 0) }} / {{ number_format($student->required_hours, 0) }}</span>
+                    </div>
+
+                    <div class="profile-mini-grid">
+                        <div class="profile-detail-card">
+                            <span>Approved Hours</span>
+                            <strong>{{ number_format($student->completed_hours, 0) }}</strong>
+                        </div>
+                        <div class="profile-detail-card">
+                            <span>Remaining Hours</span>
+                            <strong>{{ number_format($remainingHours, 0) }}</strong>
+                        </div>
+                        <div class="profile-detail-card">
+                            <span>Approved Logs</span>
+                            <strong>{{ $approvedLogs }}</strong>
+                        </div>
+                        <div class="profile-detail-card">
+                            <span>Total Submissions</span>
+                            <strong>{{ $student->hourLogs->count() }}</strong>
+                        </div>
+                    </div>
+
+                    @if (! $canSubmitHourLogs)
+                        <div class="helper-note">
+                            Hour log submissions are currently disabled for students in this tenant.
+                        </div>
+                    @else
+                        <form method="POST" action="{{ $studentHourLogAction }}">
+                            @csrf
+                            <div class="form-grid">
+                                <label>Log Date <input type="date" name="log_date" value="{{ old('log_date', now()->toDateString()) }}" required></label>
+                                <label>Hours Worked <input type="number" step="0.5" min="0.5" max="24" name="hours" value="{{ old('hours', 8) }}" required></label>
+                                <label>
+                                    Supervisor Name
+                                    <select name="supervisor_name">
+                                        <option value="">Select a supervisor</option>
+                                        @foreach ($assignedSupervisors as $assignedSupervisor)
+                                            <option value="{{ $assignedSupervisor->name }}" @selected(old('supervisor_name') === $assignedSupervisor->name)>{{ $assignedSupervisor->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </label>
+                                <label class="field-span-2">Activity <textarea name="activity" placeholder="Describe what you completed during this shift" required>{{ old('activity') }}</textarea></label>
+                            </div>
+
+                            <div class="hero-actions">
+                                <button type="submit">Submit Hour Log</button>
+                            </div>
+                        </form>
+                    @endif
+                </article>
+
+                <article class="dashboard-card">
+                    <div class="section-header">
+                        <div>
+                            <h2>Progress & Hour History</h2>
+                            <p>Your submitted logs stay visible here while admin and supervisors review them.</p>
+                        </div>
+                    </div>
+
+                    @if ($student->hourLogs->isEmpty())
+                        <p>No progress or hour logs yet.</p>
+                    @else
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Hours</th>
+                                        <th>Status</th>
+                                        <th>Supervisor</th>
+                                        <th>Activity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($student->hourLogs as $log)
+                                        <tr>
+                                            <td>{{ $log->log_date?->format('M d, Y') }}</td>
+                                            <td>{{ rtrim(rtrim(number_format($log->hours, 2), '0'), '.') }}</td>
+                                            <td><span class="table-badge">{{ strtoupper($log->status) }}</span></td>
+                                            <td>{{ $log->supervisor_name ?: 'Not set' }}</td>
+                                            <td>{{ $log->activity }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </article>
+            </div>
         @endif
     </section>
 @endsection

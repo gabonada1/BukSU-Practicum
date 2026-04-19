@@ -4,6 +4,7 @@
     $mode = $mode ?? 'create';
     $isEditing = $mode === 'edit' && filled($editingHour ?? null);
     $hourRecord = $editingHour ?? null;
+    $selectedSupervisorName = old('supervisor_name', $hourRecord?->supervisor_name);
     $action = $isEditing
         ? route('tenant.admin.hours.update', ['hour' => $hourRecord])
         : $formActions['hours'];
@@ -38,11 +39,23 @@
                 @endforeach
             </select>
         </label>
-        <label>Company Supervisor Name <input type="text" name="supervisor_name" value="{{ old('supervisor_name', $hourRecord?->supervisor_name) }}"></label>
+        <label>
+            Company Supervisor Name
+            <select name="supervisor_name">
+                <option value="">Select supervisor</option>
+                @foreach (($supervisorOptions ?? collect()) as $supervisorOption)
+                    <option value="{{ $supervisorOption->name }}" @selected($selectedSupervisorName === $supervisorOption->name)>
+                        {{ $supervisorOption->name }}@if ($supervisorOption->partnerCompany?->name) - {{ $supervisorOption->partnerCompany->name }}@endif
+                    </option>
+                @endforeach
+                @if (filled($selectedSupervisorName) && ! collect($supervisorOptions ?? [])->contains(fn ($supervisorOption) => $supervisorOption->name === $selectedSupervisorName))
+                    <option value="{{ $selectedSupervisorName }}" selected>{{ $selectedSupervisorName }}</option>
+                @endif
+            </select>
+        </label>
         <label>Activity <textarea name="activity" required placeholder="Describe the work completed during this shift">{{ old('activity', $hourRecord?->activity) }}</textarea></label>
         <button type="submit" >{{ $isEditing ? 'Save Changes' : 'Save Progress Log' }}</button>
     </form>
 @unless ($embedded)
 </article>
 @endunless
-

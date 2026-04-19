@@ -1,43 +1,21 @@
 @php
     $layoutMode = 'dashboard';
-    $validatedHours = (float) $hourLogs->where('status', 'approved')->sum('hours');
+    $currentSection = $currentSection ?? 'students';
 @endphp
 
 @extends('layouts.tenant')
 
 @section('content')
-    <section class="dashboard-hero">
-        <div>
-            <span class="app-section-kicker">Supervisor Workspace</span>
-            <h1>Company Supervisor Dashboard</h1>
-            <p>{{ $supervisor->name }} · {{ $company?->name ?: 'No partner organization assigned yet' }}</p>
-        </div>
+    @if (session('status'))
+        <div class="flash">{{ session('status') }}</div>
+    @endif
 
-        <div class="hero-metrics">
-            <article class="hero-stat">
-                <span>Students</span>
-                <strong>{{ $students->count() }}</strong>
-                <p>Interns assigned to your company.</p>
-            </article>
-            <article class="hero-stat">
-                <span>Hour Logs</span>
-                <strong>{{ $hourLogs->count() }}</strong>
-                <p>Recent submissions waiting for review.</p>
-            </article>
-            <article class="hero-stat">
-                <span>Approved</span>
-                <strong>{{ number_format($validatedHours, 0) }}</strong>
-                <p>Hours already validated.</p>
-            </article>
-        </div>
-    </section>
-
-    <section class="content-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
-        <article id="students" class="section-card">
+    @if ($currentSection === 'students')
+        <section id="students" class="section-card">
             <div class="section-header">
                 <div>
                     <h2>Students</h2>
-                    <p>{{ $company?->name ?: 'Unassigned company' }}</p>
+                    <p>{{ $company?->name ?: 'No partner organization assigned yet.' }}</p>
                 </div>
             </div>
 
@@ -48,23 +26,62 @@
                     @foreach ($students as $student)
                         @php
                             $studentProgress = $student->required_hours > 0 ? min(100, (int) round(($student->completed_hours / $student->required_hours) * 100)) : 0;
+                            $remainingHours = max(0, (float) $student->required_hours - (float) $student->completed_hours);
                         @endphp
                         <li>
                             <strong>{{ $student->full_name }}</strong>
                             <p><span class="table-badge">{{ strtoupper($student->status) }}</span></p>
-                            <p>{{ $student->completed_hours }} / {{ $student->required_hours }} hours</p>
+                            <p>{{ number_format($student->completed_hours, 0) }} / {{ number_format($student->required_hours, 0) }} hours</p>
+                            <p>{{ number_format($remainingHours, 0) }} hours remaining</p>
+                            <details class="student-documents-panel">
+                                <summary>View Documents</summary>
+                                @if ($student->requirements->isEmpty())
+                                    <p>No documents submitted yet.</p>
+                                @else
+                                    <div class="table-wrap student-documents-table-wrap">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Requirement</th>
+                                                    <th>Document</th>
+                                                    <th>Status</th>
+                                                    <th>Notes</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($student->requirements as $requirement)
+                                                    <tr>
+                                                        <td>{{ $requirement->requirement_name }}</td>
+                                                        <td>
+                                                            @if ($requirement->file_path)
+                                                                <a class="doc-link" href="{{ asset($requirement->file_path) }}" target="_blank" rel="noopener">Open file</a>
+                                                            @else
+                                                                No file
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            <span class="table-badge">{{ strtoupper($requirement->status === 'revision' ? 'requires revision' : $requirement->status) }}</span>
+                                                        </td>
+                                                        <td>{{ $requirement->feedback ?: ($requirement->notes ?: 'No feedback yet') }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @endif
+                            </details>
                             <div class="progress-track"><span style="width: {{ $studentProgress }}%"></span></div>
                         </li>
                     @endforeach
                 </ul>
             @endif
-        </article>
-
-        <article id="logs" class="section-card">
+        </section>
+    @else
+        <section id="logs" class="section-card">
             <div class="section-header">
                 <div>
                     <h2>Progress & Hour Logs</h2>
-                    <p>Recent records submitted by assigned interns.</p>
+                    <p>Submitted logs from students assigned to your company.</p>
                 </div>
             </div>
 
@@ -78,6 +95,8 @@
                                 <th>Student</th>
                                 <th>Date</th>
                                 <th>Hours</th>
+                                <th>Activity</th>
+                                <th>Review</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -85,13 +104,30 @@
                                 <tr>
                                     <td>{{ $log->student?->full_name ?: 'Unknown student' }}</td>
                                     <td>{{ $log->log_date?->format('M d, Y') }}</td>
-                                    <td>{{ $log->hours }} <span class="table-badge">{{ strtoupper($log->status) }}</span></td>
+                                    <td>{{ rtrim(rtrim(number_format($log->hours, 2), '0'), '.') }} <span class="table-badge">{{ strtoupper($log->status) }}</span></td>
+                                    <td>{{ $log->activity }}</td>
+                                    <td>
+                                        <div class="hero-actions">
+                                            <form method="POST" action="{{ route('tenant.supervisor.hours.update', ['hour' => $log]) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="approved">
+                                                <button type="submit" class="secondary">Approve</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('tenant.supervisor.hours.update', ['hour' => $log]) }}">
+                                                @csrf
+                                                @method('PATCH')
+                                                <input type="hidden" name="status" value="rejected">
+                                                <button type="submit" class="danger">Reject</button>
+                                            </form>
+                                        </div>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             @endif
-        </article>
-    </section>
+        </section>
+    @endif
 @endsection

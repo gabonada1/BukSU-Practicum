@@ -49,8 +49,8 @@
     };
     $tenantNavigation = match ($tenantRole) {
         'supervisor' => [
-            ['label' => 'Students', 'href' => $tenantDashboardUrl.'#students', 'key' => 'students', 'meta' => 'Assigned interns', 'icon' => 'fa-graduation-cap'],
-            ['label' => 'Hour Logs', 'href' => $tenantDashboardUrl.'#logs', 'key' => 'logs', 'meta' => 'Validation queue', 'icon' => 'fa-clock'],
+            ['label' => 'Students', 'href' => $tenantDashboardUrl.'?section=students', 'key' => 'students', 'meta' => 'Assigned interns', 'icon' => 'fa-graduation-cap'],
+            ['label' => 'Hour Logs', 'href' => $tenantDashboardUrl.'?section=logs', 'key' => 'logs', 'meta' => 'Validation queue', 'icon' => 'fa-clock'],
             ['label' => 'Profile', 'href' => $tenantProfileUrl, 'active' => request()->routeIs('tenant*.supervisor.profile.*'), 'meta' => 'Account details', 'icon' => 'fa-user-circle'],
         ],
         'student' => [
@@ -137,7 +137,7 @@
                         </div>
 
                         <div class="app-sidebar-footer">
-                            <div class="app-meta-card">
+                            <div class="app-meta-card" style="display: grid;">
                                 <strong>Current Version</strong>
                                 <span>{{ $tenantCurrentVersion }}</span>
                             </div>

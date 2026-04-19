@@ -4,11 +4,35 @@
     $mode = $mode ?? 'create';
     $isEditing = $mode === 'edit' && filled($editingCompany ?? null);
     $company = $editingCompany ?? null;
-    $documentOptions = ['Resume', 'Endorsement Letter', 'MOA', 'Clearance', 'Weekly Report', 'Monthly Report', 'Medical Certificate', 'Parent Consent'];
-    $selectedDocuments = old(
-        'required_documents',
-        $company ? $company->requiredDocumentsList() : []
-    );
+    $positionOptions = [
+        'Accounting Intern',
+        'Administrative Aide Intern',
+        'Business Operations Intern',
+        'Customer Service Intern',
+        'Data Analyst Intern',
+        'Database Administrator Intern',
+        'Graphic Design Intern',
+        'Human Resources Intern',
+        'IT Support Intern',
+        'Laboratory Assistant',
+        'Marketing Intern',
+        'Multimedia Intern',
+        'Network Support Intern',
+        'Office Assistant Intern',
+        'Project Management Intern',
+        'QA Tester Intern',
+        'Research Assistant',
+        'Software Developer Intern',
+        'Systems Analyst Intern',
+        'Technical Support Intern',
+        'UI/UX Design Intern',
+        'Web Developer Intern',
+    ];
+    $selectedPositions = collect(old('available_positions', $company ? $company->availablePositionsList() : []))
+        ->map(fn ($position) => trim((string) $position))
+        ->filter()
+        ->values()
+        ->all();
     $action = $isEditing
         ? route('tenant.admin.companies.update', ['company' => $company])
         : $formActions['companies'];
@@ -27,18 +51,19 @@
         @endif
         <label>Organization Name <input type="text" name="name" value="{{ old('name', $company?->name) }}" required></label>
         <label>Industry / Type <input type="text" name="industry" value="{{ old('industry', $company?->industry) }}"></label>
-        <label>Available Positions <textarea name="available_positions" placeholder="One position per line">{{ old('available_positions', $company?->available_positions) }}</textarea></label>
-        <fieldset >
-            <legend>Required Documents</legend>
-            <div >
-                @foreach ($documentOptions as $documentOption)
-                    <label >
-                        <input type="checkbox" name="required_documents[]" value="{{ $documentOption }}" @checked(in_array($documentOption, $selectedDocuments, true))>
-                        <span>{{ $documentOption }}</span>
-                    </label>
+        <label>
+            Available Positions
+            <select name="available_positions[]" multiple size="8">
+                @foreach ($positionOptions as $positionOption)
+                    <option value="{{ $positionOption }}" @selected(in_array($positionOption, $selectedPositions, true))>{{ $positionOption }}</option>
                 @endforeach
-            </div>
-        </fieldset>
+                @foreach ($selectedPositions as $selectedPosition)
+                    @if (! in_array($selectedPosition, $positionOptions, true))
+                        <option value="{{ $selectedPosition }}" selected>{{ $selectedPosition }}</option>
+                    @endif
+                @endforeach
+            </select>
+        </label>
         <label>Address <input type="text" name="address" value="{{ old('address', $company?->address) }}"></label>
         <label>Contact Person <input type="text" name="contact_person" value="{{ old('contact_person', $company?->contact_person) }}"></label>
         <label>Contact Email <input type="email" name="contact_email" value="{{ old('contact_email', $company?->contact_email) }}"></label>
@@ -49,4 +74,3 @@
 @unless ($embedded)
 </article>
 @endunless
-

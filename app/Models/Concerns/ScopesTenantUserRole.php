@@ -8,6 +8,11 @@ trait ScopesTenantUserRole
 {
     abstract protected static function tenantUserRole(): string;
 
+    public function initializeScopesTenantUserRole(): void
+    {
+        $this->attributes['role'] ??= static::tenantUserRole();
+    }
+
     protected static function bootScopesTenantUserRole(): void
     {
         static::addGlobalScope('tenant_user_role', function (Builder $query): void {

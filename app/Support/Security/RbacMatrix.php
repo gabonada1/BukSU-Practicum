@@ -25,6 +25,7 @@ class RbacMatrix
             'application.manage' => ['label' => 'manage', 'subject' => 'application'],
             'requirement.submit' => ['label' => 'submit', 'subject' => 'requirement'],
             'requirement.review' => ['label' => 'review', 'subject' => 'requirement'],
+            'hours.submit' => ['label' => 'submit', 'subject' => 'hour log'],
             'hours.review' => ['label' => 'review', 'subject' => 'hour log'],
             'report.view' => ['label' => 'view', 'subject' => 'report'],
         ];
@@ -66,6 +67,7 @@ class RbacMatrix
             'company.manage' => ['superadmin' => false, 'tenant_admin' => true, 'supervisor' => false, 'student' => false],
             'application.manage' => ['superadmin' => false, 'tenant_admin' => true, 'supervisor' => false, 'student' => true],
             'requirement.review' => ['superadmin' => false, 'tenant_admin' => true, 'supervisor' => false, 'student' => false],
+            'hours.submit' => ['superadmin' => false, 'tenant_admin' => true, 'supervisor' => false, 'student' => true],
             'hours.review' => ['superadmin' => false, 'tenant_admin' => true, 'supervisor' => false, 'student' => false],
             'report.view' => ['superadmin' => false, 'tenant_admin' => true, 'supervisor' => true, 'student' => true],
         ];
@@ -84,6 +86,7 @@ class RbacMatrix
             'application.manage' => [self::TENANT_ADMIN_ROLE => true, 'supervisor' => true, 'student' => false],
             'requirement.submit' => [self::TENANT_ADMIN_ROLE => false, 'supervisor' => false, 'student' => true],
             'requirement.review' => [self::TENANT_ADMIN_ROLE => true, 'supervisor' => true, 'student' => false],
+            'hours.submit' => [self::TENANT_ADMIN_ROLE => true, 'supervisor' => false, 'student' => true],
             'hours.review' => [self::TENANT_ADMIN_ROLE => true, 'supervisor' => true, 'student' => false],
             'report.view' => [self::TENANT_ADMIN_ROLE => true, 'supervisor' => true, 'student' => true],
         ];
@@ -103,15 +106,6 @@ class RbacMatrix
         );
 
         return (bool) ($matrix[$permission][$role] ?? false);
-    }
-
-    public static function permissionsForRole($tenant, ?string $role): array
-    {
-        return collect(array_keys(self::defaultTenantMatrix()))
-            ->mapWithKeys(fn (string $permission) => [
-                $permission => self::tenantAllows($tenant, $role, $permission),
-            ])
-            ->all();
     }
 
     public static function normalize(array $matrix, array $roles, array $definitions): array

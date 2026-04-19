@@ -1,7 +1,6 @@
 ﻿@php
     $embedded = $embedded ?? false;
     $showHeading = $showHeading ?? true;
-    $canEditHours = $sectionPermissions['edit'] ?? false;
 @endphp
 
 @unless ($embedded)
@@ -22,12 +21,10 @@
                         <td>{{ $log->log_date?->format('M d, Y') }}</td>
                         <td>{{ rtrim(rtrim(number_format($log->hours, 2), '0'), '.') }} <span class="table-badge">{{ $log->status }}</span></td>
                         <td>
-                            @if ($canEditHours)
-                                <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=hours&edit='.$log->id }}" title="Edit hour log" aria-label="Edit hour log">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                    <span class="sr-only">Edit</span>
-                                </a>
-                            @endif
+                            <a class="action-icon-button action-icon-button-secondary" href="{{ $dashboardBaseUrl.'?section=hours&edit='.$log->id }}" title="Edit hour log" aria-label="Edit hour log">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                                <span class="sr-only">Edit</span>
+                            </a>
                         </td>
                     </tr>
                 @endforeach
