@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesTenantPermissions;
 use App\Http\Controllers\Concerns\InteractsWithTenantRouting;
+use App\Http\Controllers\Concerns\RecordsTenantAudit;
 use App\Mail\StudentCredentialsMail;
 use App\Models\Course;
 use App\Models\InternshipApplication;
@@ -12,6 +13,7 @@ use App\Models\Student;
 use App\Models\TenantUser;
 use App\Support\Security\PasswordGenerator;
 use App\Support\Tenancy\CurrentTenant;
+use App\Support\Tenancy\TenantUrlGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -20,14 +22,13 @@ use Illuminate\Validation\ValidationException;
 
 class StudentController extends Controller
 {
-    use AuthorizesTenantPermissions, InteractsWithTenantRouting;
+    use AuthorizesTenantPermissions, InteractsWithTenantRouting, RecordsTenantAudit;
 
     public function store(
         Request $request,
         CurrentTenant $currentTenant,
         PasswordGenerator $passwordGenerator
-    ): RedirectResponse
-    {
+    ): RedirectResponse {
         $tenant = $currentTenant->tenant();
 
         abort_unless($tenant, 404);
@@ -65,10 +66,11 @@ class StudentController extends Controller
             'email_verified_at' => now(),
             'registered_at' => now(),
         ]));
+        $this->auditTenantActivity($request, 'created student', $student, null, $student->toArray());
 
         rescue(function () use ($tenant, $student, $plainPassword) {
             Mail::to($student->email)->send(
-                new StudentCredentialsMail($tenant, $student, $plainPassword, app(\App\Support\Tenancy\TenantUrlGenerator::class))
+                new StudentCredentialsMail($tenant, $student, $plainPassword, app(TenantUrlGenerator::class))
             );
         }, report: true);
 
@@ -123,8 +125,10 @@ class StudentController extends Controller
 
         unset($data['email_verified']);
 
+        $oldValues = $student->toArray();
         $student->update($data);
         $this->syncStudentApplicationStatus($student->fresh());
+        $this->auditTenantActivity($request, 'updated student', $student, $oldValues, $student->fresh()->toArray());
 
         return $this->redirectToTenantRoute(
             $request,

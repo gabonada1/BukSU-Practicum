@@ -32,4 +32,9 @@ class OjtHourLog extends Model
     {
         return $this->belongsTo(Student::class);
     }
+
+    public function getAuditLabel(): string
+    {
+        return 'Hour log #'.$this->getKey().' - '.$this->log_date?->format('M d, Y');
+    }
 }

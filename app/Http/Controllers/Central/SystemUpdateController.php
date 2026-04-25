@@ -20,6 +20,8 @@ class SystemUpdateController extends Controller
 
     public function index(): View
     {
+        rescue(fn () => $this->githubReleaseManager->syncPublishedTags(), null, false);
+
         $releases = SystemRelease::query()
             ->latest('published_at')
             ->latest()
@@ -37,7 +39,23 @@ class SystemUpdateController extends Controller
             'nextVersion' => $nextVersion,
             'repository' => rescue(fn () => $this->githubReleaseManager->repository(), config('services.github.repository')),
             'createReleaseAction' => route('central.updates.store'),
+            'syncTagsAction' => route('central.updates.sync-tags'),
         ]);
+    }
+
+    public function syncTags(): RedirectResponse
+    {
+        try {
+            $synced = $this->githubReleaseManager->syncPublishedTags();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()->route('central.updates.index')
+                ->withErrors(['release' => $exception->getMessage()]);
+        }
+
+        return redirect()->route('central.updates.index')
+            ->with('status', "{$synced} GitHub tag(s) were synced into the release catalog.");
     }
 
     public function store(Request $request): RedirectResponse

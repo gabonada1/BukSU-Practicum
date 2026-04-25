@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesTenantPermissions;
 use App\Http\Controllers\Concerns\InteractsWithTenantRouting;
+use App\Http\Controllers\Concerns\RecordsTenantAudit;
 use App\Models\Student;
 use App\Models\Supervisor;
 use App\Models\TenantAdmin;
@@ -20,7 +21,7 @@ use Illuminate\Validation\ValidationException;
 
 class TenantUserManagementController extends Controller
 {
-    use AuthorizesTenantPermissions, InteractsWithTenantRouting;
+    use AuthorizesTenantPermissions, InteractsWithTenantRouting, RecordsTenantAudit;
 
     public function update(Request $request, CurrentTenant $currentTenant, string $type, int $id): RedirectResponse
     {
@@ -40,6 +41,7 @@ class TenantUserManagementController extends Controller
         $targetRole = $data['role'];
         $currentRole = $this->roleFromType($type);
         $currentAdmin = Auth::guard('tenant_admin')->user();
+        $oldValues = $user->toArray();
 
         $this->authorizeTenantPermission('user.update', $tenant);
 
@@ -80,6 +82,10 @@ class TenantUserManagementController extends Controller
             $this->modelClassForRole($targetRole)::query()->create($payload);
             $user->delete();
         });
+        $this->auditTenantActivity($request, 'updated portal account', $user, $oldValues, [
+            'role' => $targetRole,
+            'is_active' => $isActive,
+        ]);
 
         return $this->redirectToTenantRoute(
             $request,

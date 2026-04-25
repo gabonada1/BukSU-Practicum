@@ -4,6 +4,7 @@ use App\Http\Controllers\Central\CentralAuthController;
 use App\Http\Controllers\Central\CentralDashboardController;
 use App\Http\Controllers\Central\PlanApplicationController;
 use App\Http\Controllers\Central\SystemUpdateController;
+use App\Http\Controllers\Central\SupportTicketController;
 use App\Http\Controllers\Central\TenantProvisionController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -31,7 +32,10 @@ Route::middleware('central.domain')->group(function () {
     Route::middleware('auth:central_superadmin')->group(function () {
         Route::get('/central/dashboard', CentralDashboardController::class)->name('central.dashboard');
         Route::get('/central/system-updates', [SystemUpdateController::class, 'index'])->name('central.updates.index');
+        Route::post('/central/system-updates/sync-tags', [SystemUpdateController::class, 'syncTags'])->name('central.updates.sync-tags');
         Route::post('/central/system-updates', [SystemUpdateController::class, 'store'])->name('central.updates.store');
+        Route::get('/central/support', [SupportTicketController::class, 'index'])->name('central.support.index');
+        Route::patch('/central/support/{ticket}', [SupportTicketController::class, 'update'])->name('central.support.update');
         Route::post('/central/applications/{application}/approve', [PlanApplicationController::class, 'approve'])->name('central.plan-applications.approve');
         Route::post('/central/applications/{application}/reject', [PlanApplicationController::class, 'reject'])->name('central.plan-applications.reject');
         Route::patch('/central/tenants/{tenant}', [TenantProvisionController::class, 'update'])->name('central.tenants.update');

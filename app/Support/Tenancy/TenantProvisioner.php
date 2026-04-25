@@ -3,6 +3,7 @@
 namespace App\Support\Tenancy;
 
 use App\Mail\TenantAdminCredentialsMail;
+use App\Models\SystemRelease;
 use App\Models\Tenant;
 use App\Models\TenantAdmin;
 use App\Models\TenantDomain;
@@ -47,15 +48,7 @@ class TenantProvisioner
                 'db_username' => $data['db_username'] ?? env('TENANT_DB_USERNAME', 'root'),
                 'db_password' => $data['db_password'] ?? env('TENANT_DB_PASSWORD', ''),
                 'is_active' => $data['is_active'] ?? true,
-                'settings' => $data['settings'] ?? [
-                    'provisioned_by' => 'central_superadmin',
-                    'branding' => [
-                        'portal_title' => 'University Practicum',
-                        'accent' => '#7B1C2E',
-                        'secondary' => '#F5A623',
-                        'logo_path' => null,
-                    ],
-                ],
+                'settings' => $this->tenantSettings($data['settings'] ?? null),
             ]);
 
             $this->storeDomains($tenant, $this->domainHostsFromData($data));
@@ -119,6 +112,42 @@ class TenantProvisioner
 
         DB::connection(config('tenancy.central_connection', 'central'))
             ->statement("CREATE DATABASE IF NOT EXISTS `{$databaseName}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    }
+
+    protected function tenantSettings(?array $settings): array
+    {
+        $settings ??= [
+            'provisioned_by' => 'central_superadmin',
+            'branding' => [
+                'portal_title' => 'University Practicum',
+                'accent' => '#7B1C2E',
+                'secondary' => '#F5A623',
+                'logo_path' => null,
+            ],
+        ];
+
+        if (! array_key_exists('release_preferences', $settings)) {
+            $settings['release_preferences'] = $this->defaultReleasePreferences();
+        }
+
+        return $settings;
+    }
+
+    protected function defaultReleasePreferences(): array
+    {
+        $latestRelease = SystemRelease::latestPublished();
+
+        if ($latestRelease) {
+            return $latestRelease->releasePreferenceSettings();
+        }
+
+        $version = (string) config('app.version', '1.0.0');
+
+        return [
+            'preferred_release_id' => null,
+            'preferred_release_version' => $version,
+            'preferred_release_tag' => $version,
+        ];
     }
 
     protected function dropTenantDatabase(string $database): void

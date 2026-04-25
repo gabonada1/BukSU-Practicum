@@ -21,9 +21,9 @@
                         <td>{{ $requirement->requirement_name }}</td>
                         <td>
                             @if ($requirement->file_path)
-                                <a class="action-icon-button" href="{{ asset($requirement->file_path) }}" target="_blank" rel="noopener" title="Open file" aria-label="Open file">
-                                    <i class="fa-solid fa-file-arrow-up-right-from-square"></i>
-                                    <span class="sr-only">Open file</span>
+                                <a class="action-icon-button document-action-button" href="{{ asset($requirement->file_path) }}" target="_blank" rel="noopener" title="Open file" aria-label="Open file">
+                                    <i class="fa-solid fa-file-lines" aria-hidden="true"></i>
+                                    <span>Open</span>
                                 </a>
                             @else
                                 No file

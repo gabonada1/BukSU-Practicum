@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\InteractsWithTenantRouting;
 use App\Models\SystemRelease;
 use App\Models\SystemUpdate;
+use App\Services\GithubReleaseManager;
 use App\Support\Tenancy\CurrentTenant;
 use App\Services\SystemUpdateService;
 use Illuminate\Contracts\View\View;
@@ -20,6 +21,7 @@ class TenantReleaseController extends Controller
 
     public function __construct(
         protected SystemUpdateService $systemUpdateService,
+        protected GithubReleaseManager $githubReleaseManager,
     ) {
     }
 
@@ -29,6 +31,8 @@ class TenantReleaseController extends Controller
 
         abort_unless($tenant, 404);
         abort_unless(Auth::guard('tenant_admin')->check(), 403);
+
+        rescue(fn () => $this->githubReleaseManager->syncPublishedTags(), null, false);
 
         $releases = SystemRelease::query()
             ->where('status', 'published')
@@ -48,10 +52,31 @@ class TenantReleaseController extends Controller
             'pageTitle' => 'Updates | '.data_get($tenant->settings, 'branding.portal_title', config('app.name', 'University Practicum')),
             'releases' => $releases,
             'applyUpdateAction' => $this->tenantRoute($tenant, 'admin.updates.apply'),
+            'syncTagsAction' => $this->tenantRoute($tenant, 'admin.updates.sync-tags'),
             'tenantUpdates' => $tenantUpdates,
             'currentVersion' => data_get($tenant->settings, 'release_preferences.preferred_release_version', config('app.version', '1.0.0')),
             'repository' => config('services.github.repository'),
         ]);
+    }
+
+    public function syncTags(CurrentTenant $currentTenant): RedirectResponse
+    {
+        $tenant = $currentTenant->tenant();
+
+        abort_unless($tenant, 404);
+        abort_unless(Auth::guard('tenant_admin')->check(), 403);
+
+        try {
+            $synced = $this->githubReleaseManager->syncPublishedTags();
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()->to($this->tenantRoute($tenant, 'admin.updates.index'))
+                ->withErrors(['release_id' => $exception->getMessage()]);
+        }
+
+        return redirect()->to($this->tenantRoute($tenant, 'admin.updates.index'))
+            ->with('status', "{$synced} GitHub tag(s) were synced into the release catalog.");
     }
 
     public function apply(Request $request, CurrentTenant $currentTenant): RedirectResponse
@@ -78,10 +103,9 @@ class TenantReleaseController extends Controller
             'status' => 'pending',
             'options' => [
                 'backup_current_release' => true,
-                'run_composer' => true,
-                'run_npm_install' => true,
                 'run_npm_build' => true,
                 'run_migrations' => true,
+                'run_seeders' => true,
                 'tenant_id' => $tenant->getKey(),
                 'tenant_name' => $tenant->name,
                 'initiated_by' => 'tenant_admin',
@@ -112,6 +136,6 @@ class TenantReleaseController extends Controller
         ]);
 
         return redirect()->to($this->tenantRoute($tenant, 'admin.updates.index'))
-            ->with('status', "Update {$release->version} was applied with Composer, NPM install, build, and migrations.");
+            ->with('status', "Update {$release->version} was applied with migrations, database seeders, and frontend build.");
     }
 }

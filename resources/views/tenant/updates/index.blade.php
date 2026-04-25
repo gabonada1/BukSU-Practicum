@@ -20,13 +20,25 @@
         <div class="flash">{{ session('status') }}</div>
     @endif
 
-    <section class="content-grid" style="grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);">
+    <section class="updates-toolbar section-card">
+        <div>
+            <span class="mini-kicker">GitHub Tags</span>
+            <h2>Release source</h2>
+            <p>Refresh the available GitHub tags before applying a tenant update.</p>
+        </div>
+        <form method="POST" action="{{ $syncTagsAction }}" class="update-sync-form">
+            @csrf
+            <button type="submit" class="secondary update-sync-button">Sync GitHub Tags</button>
+        </form>
+    </section>
+
+    <section class="updates-single-column">
         <article class="section-card">
             <div class="section-header">
                 <div>
                     <span class="mini-kicker">Published Versions</span>
                     <h2>Choose an available update</h2>
-                    <p>Tenant admins see the same published release list as central admin. Select a version below, then apply it with the standard update commands.</p>
+                    <p>Tenant admins see the same published release list as central admin. Select a version below, then apply it with the standard migration, seeding, and build commands.</p>
                 </div>
             </div>
 
@@ -64,42 +76,6 @@
             @endif
         </article>
 
-        <article class="section-card">
-            <div class="section-header">
-                <div>
-                    <span class="mini-kicker">Automatic Commands</span>
-                    <h2>What runs on apply</h2>
-                    <p>This action downloads the selected GitHub tag archive and runs the common deployment steps automatically.</p>
-                </div>
-            </div>
-
-            <div class="profile-mini-grid">
-                <div class="profile-detail-card">
-                    <span>Repository</span>
-                    <strong>{{ $repository }}</strong>
-                </div>
-                <div class="profile-detail-card">
-                    <span>Current Display Version</span>
-                    <strong>{{ $currentVersion }}</strong>
-                </div>
-                <div class="profile-detail-card">
-                    <span>Composer Install</span>
-                    <strong>Enabled</strong>
-                </div>
-                <div class="profile-detail-card">
-                    <span>NPM Install</span>
-                    <strong>Enabled</strong>
-                </div>
-                <div class="profile-detail-card">
-                    <span>NPM Build</span>
-                    <strong>Enabled</strong>
-                </div>
-                <div class="profile-detail-card">
-                    <span>Migrations</span>
-                    <strong>Enabled</strong>
-                </div>
-            </div>
-        </article>
     </section>
 
     <section class="section-card">

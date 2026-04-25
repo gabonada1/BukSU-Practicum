@@ -8,12 +8,6 @@
     $systemLogo = filled($tenantBranding['logo_path'] ?? null)
         ? asset($tenantBranding['logo_path'])
         : asset('images/logos/logo.jpg');
-    $emailPlaceholder = 'you@buksu.edu.ph';
-    $selectedLoginRole = $selectedLoginRole ?? null;
-    $tenantAccessLabel = preg_replace('#^https?://#', '', app(\App\Support\Tenancy\TenantUrlGenerator::class)->loginUrl($tenant));
-    $forgotPasswordUrl = $selectedLoginRole
-        ? route('tenant.password.request.role', ['role' => $selectedLoginRole], false)
-        : route('tenant.password.request', [], false);
 @endphp
 
 @extends('layouts.tenant')
@@ -24,14 +18,14 @@
             <div class="auth-brand-logo">
                 <img src="{{ $systemLogo }}" alt="{{ $tenantPortalTitle }} Logo">
             </div>
-            <span class="app-section-kicker">Tenant Access</span>
+            <span class="app-section-kicker">Password Reset</span>
             <h1>{{ $tenant->name }}</h1>
-            <p>{{ $tenantPortalTitle }} · {{ $tenantAccessLabel }}</p>
+            <p>Enter your email and we will send a 6-digit reset code.</p>
         </div>
 
         @if ($errors->any())
             <div class="error-panel">
-                <strong>Login failed.</strong>
+                <strong>Reset request failed.</strong>
                 <ul>
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -44,31 +38,20 @@
             <div class="flash">{{ session('status') }}</div>
         @endif
 
-        <form method="POST" action="{{ $loginAction }}" class="register-auth-form">
+        <form method="POST" action="{{ $sendCodeAction }}" class="register-auth-form">
             @csrf
             @if ($selectedLoginRole)
                 <input type="hidden" name="role" value="{{ $selectedLoginRole }}">
             @endif
             <label>
                 Email
-                <input type="email" name="email" value="{{ old('email') }}" placeholder="{{ $emailPlaceholder }}" required>
+                <input type="email" name="email" value="{{ old('email', request('email')) }}" placeholder="you@buksu.edu.ph" required autofocus>
             </label>
-            <label>
-                Password
-                <input type="password" name="password" placeholder="Enter your password" required>
-            </label>
-            <div class="auth-inline-actions">
-                <a href="{{ $forgotPasswordUrl }}">Forgot password?</a>
-            </div>
-            <label class="checkline">
-                <input type="checkbox" name="remember" value="1">
-                <span>Keep me signed in on this device</span>
-            </label>
-            <button type="submit">Sign In</button>
+            <button type="submit">Send Reset Code</button>
         </form>
 
         <div class="hero-actions">
-            <a href="{{ $registerUrl }}" class="button secondary auth-register-link">Register</a>
+            <a href="{{ $loginUrl }}" class="button secondary auth-register-link">Back to Sign In</a>
         </div>
     </article>
 @endsection

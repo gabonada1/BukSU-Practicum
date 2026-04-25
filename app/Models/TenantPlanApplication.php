@@ -53,6 +53,11 @@ class TenantPlanApplication extends Model
         return $this->belongsTo(CentralSuperadmin::class, 'reviewed_by');
     }
 
+    public function getAuditLabel(): string
+    {
+        return $this->college_name;
+    }
+
     public function isPaid(): bool
     {
         return in_array($this->payment_status, ['paid', 'manual_test'], true);

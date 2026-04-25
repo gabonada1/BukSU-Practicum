@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesTenantPermissions;
 use App\Http\Controllers\Concerns\InteractsWithTenantRouting;
+use App\Http\Controllers\Concerns\RecordsTenantAudit;
 use App\Models\InternshipApplication;
 use App\Models\PartnerCompany;
 use App\Models\Student;
@@ -18,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 class InternshipApplicationController extends Controller
 {
-    use AuthorizesTenantPermissions, InteractsWithTenantRouting;
+    use AuthorizesTenantPermissions, InteractsWithTenantRouting, RecordsTenantAudit;
 
     public function storeAdmin(
         Request $request,
@@ -46,6 +47,7 @@ class InternshipApplicationController extends Controller
         ]);
 
         $this->syncStudentAssignment($student, $application, $data['status']);
+        $this->auditTenantActivity($request, 'created internship application', $application, null, $application->toArray());
 
         return $this->redirectToTenantRoute(
             $request,
@@ -73,6 +75,7 @@ class InternshipApplicationController extends Controller
 
         $this->ensureCompanyHasCapacity($company, $student, $data['status']);
 
+        $oldValues = $application->toArray();
         $application->update($this->payloadForSave(
             $request,
             $tenant,
@@ -87,6 +90,7 @@ class InternshipApplicationController extends Controller
         ]);
 
         $this->syncStudentAssignment($student, $application->fresh(), $data['status']);
+        $this->auditTenantActivity($request, 'updated internship application', $application, $oldValues, $application->fresh()->toArray());
 
         return $this->redirectToTenantRoute(
             $request,
@@ -152,13 +156,14 @@ class InternshipApplicationController extends Controller
             'MOA' => $application->moa_path,
             'Clearance' => $application->clearance_path,
         ]);
+        $this->auditTenantActivity($request, 'submitted internship application', $application, null, $application->toArray());
 
         return redirect()->to($this->tenantRoute($tenant, 'student.dashboard').'?section=applications')
             ->with('status', 'Internship application submitted. You can now track it from your dashboard.');
     }
 
     /**
-     * @param array<string, string|null> $documents
+     * @param  array<string, string|null>  $documents
      */
     protected function syncApplicationRequirements(Student $student, array $documents): void
     {

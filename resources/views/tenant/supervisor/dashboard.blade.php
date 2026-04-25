@@ -95,6 +95,7 @@
                                 <th>Student</th>
                                 <th>Date</th>
                                 <th>Hours</th>
+                                <th>Status</th>
                                 <th>Activity</th>
                                 <th>Review</th>
                             </tr>
@@ -104,7 +105,8 @@
                                 <tr>
                                     <td>{{ $log->student?->full_name ?: 'Unknown student' }}</td>
                                     <td>{{ $log->log_date?->format('M d, Y') }}</td>
-                                    <td>{{ rtrim(rtrim(number_format($log->hours, 2), '0'), '.') }} <span class="table-badge">{{ strtoupper($log->status) }}</span></td>
+                                    <td>{{ rtrim(rtrim(number_format($log->hours, 2), '0'), '.') }}</td>
+                                    <td><span class="table-badge">{{ strtoupper($log->status) }}</span></td>
                                     <td>{{ $log->activity }}</td>
                                     <td>
                                         <div class="hero-actions">

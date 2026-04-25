@@ -11,6 +11,7 @@ use App\Models\Student;
 use App\Models\StudentRequirement;
 use App\Models\Supervisor;
 use App\Models\TenantAdmin;
+use App\Support\Security\AuditLogReader;
 use App\Support\Security\RbacMatrix;
 use App\Support\Tenancy\CurrentTenant;
 use Illuminate\View\View;
@@ -19,7 +20,7 @@ class TenantDashboardController extends Controller
 {
     use AuthorizesTenantPermissions;
 
-    public function __invoke(CurrentTenant $currentTenant): View
+    public function __invoke(CurrentTenant $currentTenant, AuditLogReader $auditLogReader): View
     {
         $tenant = $currentTenant->tenant();
 
@@ -33,7 +34,7 @@ class TenantDashboardController extends Controller
         $supervisors = Supervisor::query()->with('partnerCompany')->latest()->paginate(5, ['*'], 'supervisors_page')->withQueryString();
         $requirements = StudentRequirement::query()->with('student')->latest()->paginate(5, ['*'], 'requirements_page')->withQueryString();
         $hourLogs = OjtHourLog::query()->with('student')->latest('log_date')->paginate(5, ['*'], 'hours_page')->withQueryString();
-        
+
         // Get all records for statistics and editing
         $allCompanies = PartnerCompany::query()->with('supervisors')->latest()->get();
         $allStudents = Student::query()->with(['partnerCompany', 'applications', 'course'])->latest()->get();
@@ -41,7 +42,7 @@ class TenantDashboardController extends Controller
         $allSupervisors = Supervisor::query()->with('partnerCompany')->latest()->get();
         $allRequirements = StudentRequirement::query()->with('student')->latest()->get();
         $allHourLogs = OjtHourLog::query()->with('student')->latest('log_date')->get();
-        
+
         $userDirectory = $this->userDirectory($allStudents, $allSupervisors);
         $currentSection = request()->query('section', 'companies');
         $editKey = request()->query('edit');
@@ -106,6 +107,7 @@ class TenantDashboardController extends Controller
                 'ojt_hours_note' => $tenant->settings['ojt_hours_note'] ?? null,
             ],
             'userDirectory' => $userDirectory,
+            'auditLogs' => $auditLogReader->forTenant($tenant),
             'editing' => [
                 'companies' => $currentSection === 'companies' ? $allCompanies->firstWhere('id', (int) $editKey) : null,
                 'applications' => $allApplications->firstWhere('id', (int) $editKey),

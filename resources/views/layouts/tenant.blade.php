@@ -66,8 +66,10 @@
             ['label' => 'Users', 'href' => $tenantDashboardUrl.'?section=users', 'key' => 'users', 'meta' => 'User management', 'icon' => 'fa-users'],
             ['label' => 'RBAC', 'href' => route('tenant.admin.rbac.index'), 'active' => request()->routeIs('tenant*.admin.rbac.*'), 'meta' => 'Role permissions', 'icon' => 'fa-shield-halved'],
             ['label' => 'Updates', 'href' => route('tenant.admin.updates.index'), 'active' => request()->routeIs('tenant*.admin.updates.*'), 'meta' => 'Version rollout', 'icon' => 'fa-code-branch'],
+            ['label' => 'Support', 'href' => route('tenant.admin.support.index'), 'active' => request()->routeIs('tenant*.admin.support.*'), 'meta' => 'Central help desk', 'icon' => 'fa-headset'],
             ['label' => 'Requirements', 'href' => $tenantDashboardUrl.'?section=requirements', 'key' => 'requirements', 'meta' => 'Document desk', 'icon' => 'fa-file-clipboard'],
             ['label' => 'Hours', 'href' => $tenantDashboardUrl.'?section=hours', 'key' => 'hours', 'meta' => 'Duty records', 'icon' => 'fa-clock'],
+            ['label' => 'Audit Logs', 'href' => $tenantDashboardUrl.'?section=audit', 'key' => 'audit', 'meta' => 'Tenant activity', 'icon' => 'fa-clipboard-list'],
             ['label' => 'Profile', 'href' => $tenantProfileUrl, 'active' => request()->routeIs('tenant*.admin.profile.*'), 'meta' => 'Portal settings', 'icon' => 'fa-user-circle'],
         ],
     };

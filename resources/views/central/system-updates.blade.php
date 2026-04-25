@@ -20,7 +20,19 @@
         <div class="flash">{{ session('status') }}</div>
     @endif
 
-    <section class="content-grid" style="grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);">
+    <section class="updates-toolbar section-card">
+        <div>
+            <span class="mini-kicker">GitHub Tags</span>
+            <h2>Release source</h2>
+            <p>Refresh tag records from GitHub before creating or reviewing releases.</p>
+        </div>
+        <form method="POST" action="{{ $syncTagsAction }}" class="update-sync-form">
+            @csrf
+            <button type="submit" class="secondary update-sync-button">Sync GitHub Tags</button>
+        </form>
+    </section>
+
+    <section class="updates-single-column">
         <article class="section-card">
             <div class="section-header">
                 <div>
@@ -61,7 +73,7 @@
                     </div>
                     <div class="profile-detail-card">
                         <span>Apply Commands</span>
-                        <strong>Composer, NPM, Build, Migrate</strong>
+                        <strong>Migrate, Seed, Build</strong>
                     </div>
                 </div>
                 <div class="actions">
@@ -70,34 +82,6 @@
             </form>
         </article>
 
-        <article class="section-card">
-            <div class="section-header">
-                <div>
-                    <span class="mini-kicker">How It Works</span>
-                    <h2>Tenant rollout flow</h2>
-                    <p>Once a release is created here, tenant admins can see the same version list and apply the selected update from their own workspace.</p>
-                </div>
-            </div>
-
-            <div class="profile-mini-grid">
-                <div class="profile-detail-card">
-                    <span>1</span>
-                    <strong>Create GitHub tag</strong>
-                </div>
-                <div class="profile-detail-card">
-                    <span>2</span>
-                    <strong>Publish release record</strong>
-                </div>
-                <div class="profile-detail-card">
-                    <span>3</span>
-                    <strong>Tenant selects version</strong>
-                </div>
-                <div class="profile-detail-card">
-                    <span>4</span>
-                    <strong>Commands run automatically</strong>
-                </div>
-            </div>
-        </article>
     </section>
 
     <section class="section-card">
@@ -117,7 +101,7 @@
                     <div class="updates-release-row">
                         <div>
                             <strong>{{ $release->version }}</strong>
-                            <p>{{ $release->github_tag }} · {{ $release->published_at?->format('M d, Y h:i A') ?: 'Published' }}</p>
+                            <p>{{ $release->github_tag }} &middot; {{ $release->published_at?->format('M d, Y h:i A') ?: 'Published' }}</p>
                             <p>{{ $release->notes ?: 'No release notes were provided for this version.' }}</p>
                         </div>
                         <span class="table-badge">{{ strtoupper($release->status) }}</span>

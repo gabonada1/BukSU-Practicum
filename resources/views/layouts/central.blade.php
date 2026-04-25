@@ -9,6 +9,7 @@
         ['label' => 'Applications', 'href' => route('central.dashboard').'?section=applications', 'active' => request()->routeIs('central.dashboard') && $centralCurrentSection === 'applications', 'meta' => 'Plan reviews', 'icon' => 'fa-inbox'],
         ['label' => 'Directory', 'href' => route('central.dashboard').'?section=directory', 'active' => request()->routeIs('central.dashboard') && $centralCurrentSection === 'directory', 'meta' => 'Tenant records', 'icon' => 'fa-building'],
         ['label' => 'Updates', 'href' => route('central.updates.index'), 'active' => request()->routeIs('central.updates.*'), 'meta' => 'GitHub releases', 'icon' => 'fa-code-branch'],
+        ['label' => 'Support', 'href' => route('central.support.index'), 'active' => request()->routeIs('central.support.*'), 'meta' => 'Tenant tickets', 'icon' => 'fa-headset'],
     ];
     $activeCentralNav = collect($centralNavigation)->first(fn ($item) => $item['active'] ?? false) ?? $centralNavigation[0];
 @endphp

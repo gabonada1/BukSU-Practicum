@@ -10,6 +10,7 @@ use App\Models\Tenant;
 use App\Models\TenantAdmin;
 use App\Models\TenantDomain;
 use App\Models\TenantUser;
+use App\Support\Security\AuditLogger;
 use App\Support\Security\PasswordGenerator;
 use App\Support\Tenancy\TenantDatabaseManager;
 use App\Support\Tenancy\TenantProvisioner;
@@ -97,6 +98,7 @@ class TenantProvisionController extends Controller
         $this->authorizeTenantManagement();
 
         $wasActive = $tenant->is_active;
+        $oldName = $tenant->name;
         $oldPlan = $tenant->plan;
         $oldStartsAt = $tenant->subscription_starts_at?->toDateString();
         $oldExpiresAt = $tenant->subscription_expires_at?->toDateString();
@@ -130,6 +132,19 @@ class TenantProvisionController extends Controller
         ])->save();
         $this->syncDomainHosts($tenant, $domainHosts);
         $this->syncTenantAdminContact($tenant, $validated['admin_email'], $validated['admin_name'] ?? null);
+        $this->audit($request, 'updated tenant', $tenant, [
+            'name' => $oldName,
+            'plan' => $oldPlan,
+            'subscription_starts_at' => $oldStartsAt,
+            'subscription_expires_at' => $oldExpiresAt,
+            'is_active' => $wasActive,
+        ], [
+            'name' => $tenant->name,
+            'plan' => $tenant->plan,
+            'subscription_starts_at' => $tenant->subscription_starts_at?->toDateString(),
+            'subscription_expires_at' => $tenant->subscription_expires_at?->toDateString(),
+            'is_active' => $tenant->is_active,
+        ]);
 
         if (! $tenant->is_active) {
             rescue(fn () => $this->subscriptionNotifier->sendSuspensionNotice($tenant), report: true);
@@ -171,6 +186,11 @@ class TenantProvisionController extends Controller
         $tenant->forceFill([
             'is_active' => (bool) $validated['is_active'],
         ])->save();
+        $this->audit($request, $tenant->is_active ? 'activated tenant' : 'suspended tenant', $tenant, [
+            'is_active' => ! $tenant->is_active,
+        ], [
+            'is_active' => $tenant->is_active,
+        ]);
 
         if ($tenant->is_active) {
             rescue(fn () => $this->subscriptionNotifier->clearSuspensionNoticeFlag($tenant), report: true);
@@ -212,11 +232,13 @@ class TenantProvisionController extends Controller
 
         $tenantName = $tenant->name;
         $databaseName = $tenant->database;
+        $oldValues = $tenant->toArray();
 
         try {
             $this->tenantDatabaseManager->disconnect();
             $this->dropTenantDatabase($databaseName);
             $tenant->delete();
+            $this->audit(request(), 'deleted tenant', $tenant, $oldValues, null);
         } catch (Throwable $exception) {
             report($exception);
 
@@ -407,5 +429,21 @@ class TenantProvisionController extends Controller
     protected function authorizeTenantManagement(): void
     {
         Gate::forUser(Auth::guard('central_superadmin')->user())->authorize('manage-tenants');
+    }
+
+    protected function audit(Request $request, string $action, Tenant $tenant, ?array $oldValues = null, ?array $newValues = null): void
+    {
+        $actor = Auth::guard('central_superadmin')->user();
+
+        AuditLogger::log(
+            'central_superadmin',
+            $actor?->getKey(),
+            $actor?->name,
+            $action,
+            $tenant,
+            $oldValues,
+            $newValues,
+            $request,
+        );
     }
 }

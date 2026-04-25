@@ -41,6 +41,11 @@ class Tenant extends Model
         return 'id';
     }
 
+    public function getAuditLabel(): string
+    {
+        return $this->name;
+    }
+
     public function domains(): HasMany
     {
         return $this->hasMany(TenantDomain::class)->orderByDesc('is_primary')->orderBy('host');

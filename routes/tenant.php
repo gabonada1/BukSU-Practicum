@@ -1,22 +1,24 @@
 <?php
 
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\InternshipApplicationController;
 use App\Http\Controllers\OjtHourLogController;
 use App\Http\Controllers\PartnerCompanyController;
-use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentController;
-use App\Http\Controllers\CourseController;
-use App\Http\Controllers\TenantReleaseController;
-use App\Http\Controllers\TenantAdminPasswordSetupController;
-use App\Http\Controllers\TenantProfileController;
-use App\Http\Controllers\TenantRegistrationController;
-use App\Http\Controllers\TenantRbacController;
-use App\Http\Controllers\TenantUserManagementController;
+use App\Http\Controllers\StudentDashboardController;
 use App\Http\Controllers\StudentRequirementController;
 use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\SupervisorDashboardController;
+use App\Http\Controllers\TenantAdminPasswordSetupController;
 use App\Http\Controllers\TenantAuthController;
 use App\Http\Controllers\TenantDashboardController;
+use App\Http\Controllers\TenantForgotPasswordController;
+use App\Http\Controllers\TenantProfileController;
+use App\Http\Controllers\TenantRbacController;
+use App\Http\Controllers\TenantRegistrationController;
+use App\Http\Controllers\TenantReleaseController;
+use App\Http\Controllers\TenantSupportController;
+use App\Http\Controllers\TenantUserManagementController;
 use Illuminate\Support\Facades\Route;
 
 $loginRoles = ['admin', 'student', 'supervisor'];
@@ -30,6 +32,22 @@ $registerTenantRoutes = function (string $namePrefix) use ($loginRoles): void {
     Route::post('/{role}/login', [TenantAuthController::class, 'store'])
         ->whereIn('role', $loginRoles)
         ->name("{$namePrefix}login.store");
+    Route::get('/forgot-password', [TenantForgotPasswordController::class, 'create'])->name("{$namePrefix}password.request");
+    Route::post('/forgot-password', [TenantForgotPasswordController::class, 'store'])->name("{$namePrefix}password.email");
+    Route::get('/reset-password', [TenantForgotPasswordController::class, 'edit'])->name("{$namePrefix}password.reset");
+    Route::post('/reset-password', [TenantForgotPasswordController::class, 'update'])->name("{$namePrefix}password.update");
+    Route::get('/{role}/forgot-password', [TenantForgotPasswordController::class, 'create'])
+        ->whereIn('role', $loginRoles)
+        ->name("{$namePrefix}password.request.role");
+    Route::post('/{role}/forgot-password', [TenantForgotPasswordController::class, 'store'])
+        ->whereIn('role', $loginRoles)
+        ->name("{$namePrefix}password.email.role");
+    Route::get('/{role}/reset-password', [TenantForgotPasswordController::class, 'edit'])
+        ->whereIn('role', $loginRoles)
+        ->name("{$namePrefix}password.reset.role");
+    Route::post('/{role}/reset-password', [TenantForgotPasswordController::class, 'update'])
+        ->whereIn('role', $loginRoles)
+        ->name("{$namePrefix}password.update.role");
 
     Route::get('/register', [TenantRegistrationController::class, 'create'])->name("{$namePrefix}register.create");
     Route::post('/register', [TenantRegistrationController::class, 'store'])->name("{$namePrefix}register.store");
@@ -50,7 +68,10 @@ $registerTenantRoutes = function (string $namePrefix) use ($loginRoles): void {
         Route::post('/admin/profile/branding-settings', [TenantProfileController::class, 'saveBrandingSettings'])->defaults('role', 'admin')->name("{$namePrefix}admin.profile.branding-settings");
         Route::post('/admin/profile/ojt-settings', [TenantProfileController::class, 'saveOjtSettings'])->defaults('role', 'admin')->name("{$namePrefix}admin.profile.ojt-settings");
         Route::get('/admin/updates', [TenantReleaseController::class, 'index'])->name("{$namePrefix}admin.updates.index");
+        Route::post('/admin/updates/sync-tags', [TenantReleaseController::class, 'syncTags'])->name("{$namePrefix}admin.updates.sync-tags");
         Route::post('/admin/updates', [TenantReleaseController::class, 'apply'])->name("{$namePrefix}admin.updates.apply");
+        Route::get('/admin/support', [TenantSupportController::class, 'index'])->name("{$namePrefix}admin.support.index");
+        Route::post('/admin/support', [TenantSupportController::class, 'store'])->name("{$namePrefix}admin.support.store");
         Route::get('/admin/rbac', [TenantRbacController::class, 'index'])->name("{$namePrefix}admin.rbac.index");
         Route::post('/admin/rbac', [TenantRbacController::class, 'update'])->name("{$namePrefix}admin.rbac.update");
         Route::post('/admin/rbac/reset', [TenantRbacController::class, 'reset'])->name("{$namePrefix}admin.rbac.reset");

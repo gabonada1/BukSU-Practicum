@@ -71,26 +71,18 @@ class SystemUpdateService
             $sourcePath = $this->extractReleaseArchive($update, $downloadPath, $extractPath);
             $this->applyRelease($update, $sourcePath, base_path());
 
-            if ($options['run_composer']) {
-                $this->runProcess($update, $this->composerCommand([
-                    'install',
-                    '--no-interaction',
-                    '--prefer-dist',
-                    '--optimize-autoloader',
-                ]), 'Composer dependencies installed.', $this->composerEnvironment());
+            if ($options['run_migrations']) {
+                Artisan::call('migrate', ['--force' => true]);
+                $this->log($update, 'Database migrations completed.');
             }
 
-            if ($options['run_npm_install']) {
-                $this->runProcess($update, [$this->binary('npm'), 'install'], 'NPM dependencies installed.');
+            if ($options['run_seeders']) {
+                Artisan::call('db:seed', ['--force' => true]);
+                $this->log($update, 'Database seeders completed.');
             }
 
             if ($options['run_npm_build']) {
                 $this->runProcess($update, [$this->binary('npm'), 'run', 'build'], 'Frontend assets built.');
-            }
-
-            if ($options['run_migrations']) {
-                Artisan::call('migrate', ['--force' => true]);
-                $this->log($update, 'Database migrations completed.');
             }
 
             $this->cleanup($workingRoot);
@@ -143,10 +135,9 @@ class SystemUpdateService
     {
         return [
             'backup_current_release' => (bool) Arr::get($options, 'backup_current_release', true),
-            'run_composer' => (bool) Arr::get($options, 'run_composer', true),
-            'run_npm_install' => (bool) Arr::get($options, 'run_npm_install', true),
             'run_npm_build' => (bool) Arr::get($options, 'run_npm_build', true),
             'run_migrations' => (bool) Arr::get($options, 'run_migrations', true),
+            'run_seeders' => (bool) Arr::get($options, 'run_seeders', true),
         ];
     }
 
@@ -316,48 +307,6 @@ class SystemUpdateService
         $this->log($update, $successMessage);
     }
 
-    protected function composerCommand(array $arguments): array
-    {
-        $tempDirectory = $this->composerTempDirectory();
-        $composerPharCandidates = array_filter([
-            base_path('composer.phar'),
-            'C:\\ProgramData\\ComposerSetup\\bin\\composer.phar',
-        ]);
-
-        foreach ($composerPharCandidates as $composerPhar) {
-            if (File::exists($composerPhar)) {
-                return array_merge([PHP_BINARY, '-d', 'sys_temp_dir='.$tempDirectory, $composerPhar], $arguments);
-            }
-        }
-
-        return array_merge([$this->binary('composer')], $arguments);
-    }
-
-    protected function composerEnvironment(): array
-    {
-        $composerHome = storage_path('app/composer');
-        $tempDirectory = $this->composerTempDirectory();
-
-        File::ensureDirectoryExists($composerHome);
-        File::ensureDirectoryExists($tempDirectory);
-
-        return [
-            'APPDATA' => $composerHome,
-            'COMPOSER_HOME' => $composerHome,
-            'TEMP' => $tempDirectory,
-            'TMP' => $tempDirectory,
-        ];
-    }
-
-    protected function composerTempDirectory(): string
-    {
-        $tempDirectory = storage_path('app/tmp');
-
-        File::ensureDirectoryExists($tempDirectory);
-
-        return $tempDirectory;
-    }
-
     protected function binary(string $tool): string
     {
         if (PHP_OS_FAMILY !== 'Windows') {
@@ -365,7 +314,6 @@ class SystemUpdateService
         }
 
         return match ($tool) {
-            'composer' => 'composer.bat',
             'npm' => 'npm.cmd',
             default => $tool,
         };

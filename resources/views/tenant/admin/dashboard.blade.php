@@ -45,6 +45,10 @@
             'table' => 'tenant.partials.tables.hour-logs-table',
             'form' => 'tenant.partials.forms.hour-log-form',
         ],
+        'audit' => [
+            'title' => 'Audit Logs',
+            'empty' => 'No tenant audit logs yet.',
+        ],
     ];
 
     if (! array_key_exists($currentSection, $sections)) {
@@ -58,7 +62,7 @@
     $editingRequirement = $editing['requirements'] ?? null;
     $editingHour = $editing['hours'] ?? null;
     $editingUser = $editing['users'] ?? null;
-    $showCreatePanel = ($createSection === $currentSection || $errors->any()) && $currentSection !== 'users';
+    $showCreatePanel = ($createSection === $currentSection || $errors->any()) && ! in_array($currentSection, ['users', 'audit'], true);
     $showEditPanel = filled(match ($currentSection) {
         'companies' => $editingCompany,
         'supervisors' => $editingSupervisor,
@@ -78,6 +82,7 @@
         'users' => 'Manage coordinator, supervisor, and student accounts inside this tenant workspace.',
         'requirements' => 'Review requirement submissions, monitor approval flow, and keep document compliance moving.',
         'hours' => 'Watch validated duty hours, keep logs accurate, and surface records that still need review.',
+        'audit' => 'Review activity recorded only for '.$tenant->name.'. Other tenant activity is excluded from this workspace.',
     ][$currentSection];
 @endphp
 
@@ -111,6 +116,7 @@
                         <a class="panel-link" href="{{ $dashboardBaseUrl.'?section=students&create=students' }}">Add Student</a>
                     @endif
                     <a class="panel-link" href="{{ $rbacIndexUrl }}">RBAC</a>
+                @elseif ($currentSection === 'audit')
                 @else
                     <a class="panel-link" href="{{ $dashboardBaseUrl.'?section='.$currentSection.'&create='.$currentSection }}">Add Record</a>
                 @endif
@@ -146,9 +152,59 @@
                 </div>
             @endif
 
-            <div class="dashboard-card dashboard-table-card">
-                @include($section['table'], ['embedded' => true, 'showHeading' => false])
-            </div>
+            @if ($currentSection === 'audit')
+                <div class="dashboard-card dashboard-table-card">
+                    <div class="table-header">
+                        <div>
+                            <span class="mini-kicker">Tenant Scoped</span>
+                            <h2>{{ $tenant->name }} Activity</h2>
+                            <p>{{ $auditLogs->count() }} audit entries belong to this tenant.</p>
+                        </div>
+                    </div>
+
+                    @if ($auditLogs->isEmpty())
+                        <div class="empty-state">
+                            <strong>No tenant audit logs yet.</strong>
+                            <p>New activity for {{ $tenant->name }} will appear here after actions are recorded.</p>
+                        </div>
+                    @else
+                        <div class="table-wrap audit-table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Actor</th>
+                                        <th>Action</th>
+                                        <th>Record</th>
+                                        <th>IP</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($auditLogs as $log)
+                                        <tr>
+                                            <td>{{ $log['occurred_at'] }}</td>
+                                            <td>
+                                                <strong>{{ $log['actor'] }}</strong>
+                                                <p>{{ $log['actor_type'] }}</p>
+                                            </td>
+                                            <td><span class="table-badge">{{ $log['action'] }}</span></td>
+                                            <td>
+                                                <strong>{{ $log['subject'] }}</strong>
+                                                <p>{{ $log['url'] }}</p>
+                                            </td>
+                                            <td>{{ $log['ip_address'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            @else
+                <div class="dashboard-card dashboard-table-card">
+                    @include($section['table'], ['embedded' => true, 'showHeading' => false])
+                </div>
+            @endif
 
             @if ($currentSection === 'students' && $selectedStudentForApplications)
                 <div class="dashboard-card dashboard-table-card">

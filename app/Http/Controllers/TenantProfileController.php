@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\InteractsWithTenantRouting;
+use App\Http\Controllers\Concerns\RecordsTenantAudit;
 use App\Models\Course;
 use App\Models\Student;
-use App\Models\Supervisor;
-use App\Models\TenantAdmin;
 use App\Models\TenantUser;
 use App\Support\Tenancy\CurrentTenant;
 use App\Support\Tenancy\TenantUploadManager;
@@ -20,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 
 class TenantProfileController extends Controller
 {
-    use InteractsWithTenantRouting;
+    use InteractsWithTenantRouting, RecordsTenantAudit;
 
     public function show(CurrentTenant $currentTenant): View
     {
@@ -89,7 +88,9 @@ class TenantProfileController extends Controller
 
         $this->ensureEmailStaysUniqueAcrossRoles($role, $data['email'], $user->getKey());
 
+        $oldValues = $user->toArray();
         $user->update($data);
+        $this->auditTenantActivity($request, 'updated profile', $user, $oldValues, $user->fresh()->toArray());
 
         return $this->redirectToTenantRoute($request, $tenant, $this->profileRouteName($role, 'profile.show'), status: 'Profile updated.');
     }
@@ -115,6 +116,7 @@ class TenantProfileController extends Controller
         $user->update([
             'password' => $data['password'],
         ]);
+        $this->auditTenantActivity($request, 'updated password', $user);
 
         Auth::guard($guard)->setUser($user->fresh());
 
@@ -134,6 +136,7 @@ class TenantProfileController extends Controller
             'ojt_hours_note' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $oldSettings = $tenant->settings ?? [];
         $settings = $tenant->settings ?? [];
         $settings['default_ojt_hours'] = (float) $validated['default_ojt_hours'];
         $settings['allow_student_hour_override'] = $request->boolean('allow_student_hour_override', false);
@@ -141,6 +144,11 @@ class TenantProfileController extends Controller
 
         $tenant->update([
             'settings' => $settings,
+        ]);
+        $this->auditTenantActivity($request, 'updated ojt settings', $tenant, [
+            'settings' => $oldSettings,
+        ], [
+            'settings' => $tenant->fresh()->settings,
         ]);
 
         return $this->redirectToTenantRoute($request, $tenant, 'admin.profile.show', status: 'OJT hours settings saved.')
@@ -172,6 +180,7 @@ class TenantProfileController extends Controller
             'portal_logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
+        $oldSettings = $tenant->settings ?? [];
         $settings = $tenant->settings ?? [];
         $branding = is_array($settings['branding'] ?? null) ? $settings['branding'] : [];
         $portalTitle = trim($validated['portal_title']);
@@ -198,6 +207,11 @@ class TenantProfileController extends Controller
 
         $tenant->update([
             'settings' => $settings,
+        ]);
+        $this->auditTenantActivity($request, 'updated portal branding', $tenant, [
+            'settings' => $oldSettings,
+        ], [
+            'settings' => $tenant->fresh()->settings,
         ]);
 
         return $this->redirectToTenantRoute($request, $tenant, 'admin.profile.show', status: 'Portal branding saved.')

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesTenantPermissions;
 use App\Http\Controllers\Concerns\InteractsWithTenantRouting;
+use App\Http\Controllers\Concerns\RecordsTenantAudit;
 use App\Models\Supervisor;
 use App\Models\TenantUser;
 use App\Support\Tenancy\CurrentTenant;
@@ -13,7 +14,7 @@ use Illuminate\Validation\ValidationException;
 
 class SupervisorController extends Controller
 {
-    use AuthorizesTenantPermissions, InteractsWithTenantRouting;
+    use AuthorizesTenantPermissions, InteractsWithTenantRouting, RecordsTenantAudit;
 
     public function store(Request $request, CurrentTenant $currentTenant): RedirectResponse
     {
@@ -33,11 +34,12 @@ class SupervisorController extends Controller
 
         $this->ensureEmailIsAvailable($data['email']);
 
-        Supervisor::query()->create($data + [
+        $supervisor = Supervisor::query()->create($data + [
             'is_active' => true,
             'email_verified_at' => now(),
             'registered_at' => now(),
         ]);
+        $this->auditTenantActivity($request, 'created company supervisor', $supervisor, null, $supervisor->toArray());
 
         return $this->redirectToTenantRoute(
             $request,
@@ -78,7 +80,9 @@ class SupervisorController extends Controller
             : null;
         unset($data['email_verified']);
 
+        $oldValues = $supervisor->toArray();
         $supervisor->update($data);
+        $this->auditTenantActivity($request, 'updated company supervisor', $supervisor, $oldValues, $supervisor->fresh()->toArray());
 
         return $this->redirectToTenantRoute(
             $request,

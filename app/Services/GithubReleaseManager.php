@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\SystemRelease;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
@@ -71,6 +72,45 @@ class GithubReleaseManager
             'archive_url' => $this->archiveUrl($repository, $version),
             'notes' => $notes,
         ];
+    }
+
+    public function syncPublishedTags(): int
+    {
+        $repository = $this->repository();
+        $synced = 0;
+
+        foreach ($this->tags() as $tag) {
+            $tagName = (string) ($tag['name'] ?? '');
+            $version = $this->sanitizeVersion($tagName);
+
+            if ($version === null) {
+                continue;
+            }
+
+            $release = SystemRelease::query()
+                ->where('github_tag', $tagName)
+                ->orWhere('version', $version)
+                ->first();
+
+            $attributes = [
+                'version' => $version,
+                'github_tag' => $tagName,
+                'github_sha' => (string) data_get($tag, 'commit.sha', ''),
+                'archive_url' => $this->archiveUrl($repository, $tagName),
+                'status' => 'published',
+                'published_at' => $release?->published_at ?? now(),
+            ];
+
+            if ($release) {
+                $release->forceFill($attributes)->save();
+            } else {
+                SystemRelease::query()->create($attributes);
+            }
+
+            $synced++;
+        }
+
+        return $synced;
     }
 
     public function archiveUrl(string $repository, string $tag): string

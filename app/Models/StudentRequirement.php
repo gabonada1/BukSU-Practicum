@@ -38,4 +38,9 @@ class StudentRequirement extends Model
     {
         return $this->file_path ? asset($this->file_path) : null;
     }
+
+    public function getAuditLabel(): string
+    {
+        return (string) $this->requirement_name;
+    }
 }

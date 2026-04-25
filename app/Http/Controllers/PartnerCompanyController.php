@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\AuthorizesTenantPermissions;
 use App\Http\Controllers\Concerns\InteractsWithTenantRouting;
+use App\Http\Controllers\Concerns\RecordsTenantAudit;
 use App\Models\PartnerCompany;
 use App\Support\Tenancy\CurrentTenant;
 use Illuminate\Http\RedirectResponse;
@@ -11,7 +12,7 @@ use Illuminate\Http\Request;
 
 class PartnerCompanyController extends Controller
 {
-    use AuthorizesTenantPermissions, InteractsWithTenantRouting;
+    use AuthorizesTenantPermissions, InteractsWithTenantRouting, RecordsTenantAudit;
 
     /**
      * @return array<string, mixed>
@@ -48,9 +49,10 @@ class PartnerCompanyController extends Controller
         abort_unless($tenant, 404);
         $this->authorizeTenantPermission('company.manage', $tenant);
 
-        PartnerCompany::query()->create($this->validatedPayload($request) + [
+        $company = PartnerCompany::query()->create($this->validatedPayload($request) + [
             'is_active' => true,
         ]);
+        $this->auditTenantActivity($request, 'created partner organization', $company, null, $company->toArray());
 
         return $this->redirectToTenantRoute(
             $request,
@@ -68,7 +70,9 @@ class PartnerCompanyController extends Controller
         abort_unless($tenant, 404);
         $this->authorizeTenantPermission('company.manage', $tenant);
 
+        $oldValues = $company->toArray();
         $company->update($this->validatedPayload($request));
+        $this->auditTenantActivity($request, 'updated partner organization', $company, $oldValues, $company->fresh()->toArray());
 
         return $this->redirectToTenantRoute(
             $request,

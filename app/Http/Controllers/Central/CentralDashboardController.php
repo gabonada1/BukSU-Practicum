@@ -6,26 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\TenantPlanApplication;
 use App\Support\Billing\PlanCatalog;
+use App\Support\Security\AuditLogReader;
 use App\Support\Tenancy\TenantAdminContactResolver;
-use Illuminate\Support\Collection;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 
 class CentralDashboardController extends Controller
 {
     public function __construct(
         protected TenantAdminContactResolver $contactResolver,
-    ) {
-    }
+        protected AuditLogReader $auditLogReader,
+    ) {}
 
     public function __invoke(): View
     {
         $tenants = Tenant::query()->with(['domains', 'primaryDomain'])->latest()->paginate(5, ['*'], 'tenants_page')->withQueryString();
         $applications = TenantPlanApplication::query()->with(['tenant.domains', 'tenant.primaryDomain'])->latest()->paginate(5, ['*'], 'applications_page')->withQueryString();
-        
+
         // Get all records for statistics
         $allTenants = Tenant::query()->with(['domains', 'primaryDomain'])->latest()->get();
         $allApplications = TenantPlanApplication::query()->with(['tenant.domains', 'tenant.primaryDomain'])->latest()->get();
-        
+
         $tenantBandwidthProfiles = $allTenants
             ->map(fn (Tenant $tenant) => $this->bandwidthProfile($tenant))
             ->keyBy('id');
@@ -67,6 +68,7 @@ class CentralDashboardController extends Controller
             'planBandwidthDefaults' => $this->bandwidthDefaults(),
             'tenantContacts' => $tenantContacts,
             'tenantBandwidthProfiles' => $tenantBandwidthProfiles,
+            'auditLogs' => $this->auditLogReader->all(),
             'applicationReviewBaseUrl' => route('central.dashboard').'?section=applications',
             'logoutAction' => route('central.logout'),
         ]);

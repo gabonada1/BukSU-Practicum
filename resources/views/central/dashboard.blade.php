@@ -28,6 +28,8 @@
             'meta' => 'Central Admin - '.optional($application->created_at)->format('m/d/Y'),
         ]))
         ->take(5);
+    $centralActor = auth('central_superadmin')->user();
+    $auditLogPages = $auditLogs->isEmpty() ? collect([collect()]) : $auditLogs->chunk(12)->values();
 @endphp
 
 @extends('layouts.central')
@@ -49,6 +51,20 @@
     @endif
 
     @if ($currentSection === 'overview')
+        <section class="section-card audit-toolbar-card">
+            <div class="section-header">
+                <div>
+                    <span class="mini-kicker">Security</span>
+                    <h2>Audit Logs</h2>
+                    <p>Review recent recorded system activity from the central dashboard.</p>
+                </div>
+                <button type="button" class="secondary" data-audit-open>
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    Audit Logs
+                </button>
+            </div>
+        </section>
+
         <section class="metric-grid">
             <article class="metric-card">
                 <span>Active Tenants</span>
@@ -283,7 +299,7 @@
                                                     <span class="sr-only">Review application</span>
                                                 </a>
                                                 @if ($application->tenant)
-                                                    <a class="action-icon-button" href="{{ app(\App\Support\Tenancy\TenantUrlGenerator::class)->loginUrl($application->tenant) }}" title="Open portal" aria-label="Open portal">
+                                                    <a class="action-icon-button" href="{{ app(\App\Support\Tenancy\TenantUrlGenerator::class)->loginUrl($application->tenant) }}" target="_blank" rel="noopener noreferrer" title="Open portal" aria-label="Open portal">
                                                         <i class="fa-solid fa-arrow-up-right-from-square"></i>
                                                         <span class="sr-only">Open portal</span>
                                                     </a>
@@ -426,7 +442,7 @@
                                         <td><span class="table-badge">{{ ucfirst($tenant->subscriptionStatus()) }}</span></td>
                                         <td>
                                             <div class="link-row">
-                                                <a class="action-icon-button" href="{{ $tenantPortalUrl }}" title="Open portal" aria-label="Open portal">
+                                                <a class="action-icon-button" href="{{ $tenantPortalUrl }}" target="_blank" rel="noopener noreferrer" title="Open portal" aria-label="Open portal">
                                                     <i class="fa-solid fa-arrow-up-right-from-square"></i>
                                                     <span class="sr-only">Open portal</span>
                                                 </a>
@@ -474,4 +490,163 @@
             </article>
         </section>
     @endif
+
+    <div class="modal-shell" data-audit-modal hidden aria-hidden="true">
+        <article class="section-card modal-card modal-card-wide audit-modal-card" role="dialog" aria-modal="true" aria-labelledby="audit-modal-title">
+            <div class="section-header">
+                <div>
+                    <span class="mini-kicker">Security</span>
+                    <h2 id="audit-modal-title">Audit Logs</h2>
+                    <p>{{ $auditLogs->count() }} recent entries available for review and PDF export.</p>
+                </div>
+                <button type="button" class="modal-close-button" data-audit-close aria-label="Close audit logs">&times;</button>
+            </div>
+
+            <div class="audit-modal-body">
+                <div class="audit-modal-actions">
+                    <button type="button" data-audit-print>
+                        <i class="fa-solid fa-file-pdf"></i>
+                        Download PDF
+                    </button>
+                    <button type="button" class="secondary" data-audit-close>Close</button>
+                </div>
+
+                @if ($auditLogs->isEmpty())
+                    <div class="empty-state">
+                        <strong>No audit logs yet.</strong>
+                        <p>New audit events will appear here after actions are recorded by the system.</p>
+                    </div>
+                @else
+                    <div class="table-wrap audit-table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Tenant</th>
+                                    <th>Actor</th>
+                                    <th>Action</th>
+                                    <th>Record</th>
+                                    <th>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($auditLogs as $log)
+                                    <tr>
+                                        <td>{{ $log['occurred_at'] }}</td>
+                                        <td>{{ $log['tenant'] }}</td>
+                                        <td>
+                                            <strong>{{ $log['actor'] }}</strong>
+                                            <p>{{ $log['actor_type'] }}</p>
+                                        </td>
+                                        <td><span class="table-badge">{{ $log['action'] }}</span></td>
+                                        <td>
+                                            <strong>{{ $log['subject'] }}</strong>
+                                            <p>{{ $log['url'] }}</p>
+                                        </td>
+                                        <td>{{ $log['ip_address'] }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </article>
+    </div>
+
+    <div class="audit-print-report" aria-hidden="true">
+        @foreach ($auditLogPages as $pageIndex => $pageLogs)
+            <section class="audit-print-page">
+                <header class="audit-print-header">
+                    <img src="{{ asset('images/logos/logo.jpg') }}" alt="Bukidnon State University Logo">
+                    <div>
+                        <strong>Bukidnon State University</strong>
+                        <h1>Audit Logs Report</h1>
+                        <p>Prepared by {{ $centralActor?->name ?: 'Central Superadmin' }} · Generated {{ now()->format('M d, Y h:i A') }}</p>
+                    </div>
+                </header>
+
+                @if ($pageLogs->isEmpty())
+                    <p class="audit-print-empty">No audit log entries are available.</p>
+                @else
+                    <table class="audit-print-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Tenant</th>
+                                <th>Actor</th>
+                                <th>Action</th>
+                                <th>Record</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($pageLogs as $log)
+                                <tr>
+                                    <td>{{ $log['occurred_at'] }}</td>
+                                    <td>{{ $log['tenant'] }}</td>
+                                    <td>{{ $log['actor'] }}</td>
+                                    <td>{{ $log['action'] }}</td>
+                                    <td>{{ $log['subject'] }}</td>
+                                    <td>{{ $log['ip_address'] }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+
+                <footer class="audit-print-footer">
+                    <span>{{ config('app.name', 'University Practicum') }}</span>
+                    <span>Page {{ $pageIndex + 1 }} of {{ $auditLogPages->count() }}</span>
+                </footer>
+            </section>
+        @endforeach
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.querySelector('[data-audit-modal]');
+            const openButton = document.querySelector('[data-audit-open]');
+            const closeButtons = document.querySelectorAll('[data-audit-close]');
+            const printButton = document.querySelector('[data-audit-print]');
+
+            function openAuditModal() {
+                if (! modal) {
+                    return;
+                }
+
+                modal.removeAttribute('hidden');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+            }
+
+            function closeAuditModal() {
+                if (! modal) {
+                    return;
+                }
+
+                modal.setAttribute('hidden', 'hidden');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('modal-open');
+            }
+
+            openButton?.addEventListener('click', openAuditModal);
+            closeButtons.forEach(function (button) {
+                button.addEventListener('click', closeAuditModal);
+            });
+            modal?.addEventListener('click', function (event) {
+                if (event.target === modal) {
+                    closeAuditModal();
+                }
+            });
+            printButton?.addEventListener('click', function () {
+                window.print();
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && modal && !modal.hasAttribute('hidden')) {
+                    closeAuditModal();
+                }
+            });
+        });
+    </script>
 @endsection

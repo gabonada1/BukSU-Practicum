@@ -62,4 +62,9 @@ class PartnerCompany extends Model
             ->values()
             ->all();
     }
+
+    public function getAuditLabel(): string
+    {
+        return (string) $this->name;
+    }
 }

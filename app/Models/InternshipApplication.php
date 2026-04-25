@@ -44,4 +44,9 @@ class InternshipApplication extends Model
     {
         return $this->belongsTo(PartnerCompany::class);
     }
+
+    public function getAuditLabel(): string
+    {
+        return '#'.$this->getKey().' '.$this->position_applied;
+    }
 }

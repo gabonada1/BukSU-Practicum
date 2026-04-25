@@ -8,12 +8,6 @@
     $systemLogo = filled($tenantBranding['logo_path'] ?? null)
         ? asset($tenantBranding['logo_path'])
         : asset('images/logos/logo.jpg');
-    $emailPlaceholder = 'you@buksu.edu.ph';
-    $selectedLoginRole = $selectedLoginRole ?? null;
-    $tenantAccessLabel = preg_replace('#^https?://#', '', app(\App\Support\Tenancy\TenantUrlGenerator::class)->loginUrl($tenant));
-    $forgotPasswordUrl = $selectedLoginRole
-        ? route('tenant.password.request.role', ['role' => $selectedLoginRole], false)
-        : route('tenant.password.request', [], false);
 @endphp
 
 @extends('layouts.tenant')
@@ -24,14 +18,14 @@
             <div class="auth-brand-logo">
                 <img src="{{ $systemLogo }}" alt="{{ $tenantPortalTitle }} Logo">
             </div>
-            <span class="app-section-kicker">Tenant Access</span>
-            <h1>{{ $tenant->name }}</h1>
-            <p>{{ $tenantPortalTitle }} · {{ $tenantAccessLabel }}</p>
+            <span class="app-section-kicker">Password Reset</span>
+            <h1>Create a new password</h1>
+            <p>Use the 6-digit code sent to your email for {{ $tenant->name }}.</p>
         </div>
 
         @if ($errors->any())
             <div class="error-panel">
-                <strong>Login failed.</strong>
+                <strong>Password reset failed.</strong>
                 <ul>
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -44,31 +38,32 @@
             <div class="flash">{{ session('status') }}</div>
         @endif
 
-        <form method="POST" action="{{ $loginAction }}" class="register-auth-form">
+        <form method="POST" action="{{ $resetAction }}" class="register-auth-form">
             @csrf
             @if ($selectedLoginRole)
                 <input type="hidden" name="role" value="{{ $selectedLoginRole }}">
             @endif
             <label>
                 Email
-                <input type="email" name="email" value="{{ old('email') }}" placeholder="{{ $emailPlaceholder }}" required>
+                <input type="email" name="email" value="{{ old('email', request('email')) }}" placeholder="you@buksu.edu.ph" required autofocus>
             </label>
             <label>
-                Password
-                <input type="password" name="password" placeholder="Enter your password" required>
+                Reset Code
+                <input type="text" name="code" value="{{ old('code') }}" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="123456" required>
             </label>
-            <div class="auth-inline-actions">
-                <a href="{{ $forgotPasswordUrl }}">Forgot password?</a>
-            </div>
-            <label class="checkline">
-                <input type="checkbox" name="remember" value="1">
-                <span>Keep me signed in on this device</span>
+            <label>
+                New Password
+                <input type="password" name="password" placeholder="At least 8 characters" required>
             </label>
-            <button type="submit">Sign In</button>
+            <label>
+                Confirm New Password
+                <input type="password" name="password_confirmation" placeholder="Repeat your new password" required>
+            </label>
+            <button type="submit">Reset Password</button>
         </form>
 
         <div class="hero-actions">
-            <a href="{{ $registerUrl }}" class="button secondary auth-register-link">Register</a>
+            <a href="{{ $requestCodeUrl }}" class="button secondary auth-register-link">Request New Code</a>
         </div>
     </article>
 @endsection

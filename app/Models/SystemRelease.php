@@ -27,8 +27,26 @@ class SystemRelease extends Model
         ];
     }
 
+    public static function latestPublished(): ?self
+    {
+        return static::query()
+            ->where('status', 'published')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->first();
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(CentralSuperadmin::class, 'created_by');
+    }
+
+    public function releasePreferenceSettings(): array
+    {
+        return [
+            'preferred_release_id' => $this->getKey(),
+            'preferred_release_version' => $this->version,
+            'preferred_release_tag' => $this->github_tag,
+        ];
     }
 }

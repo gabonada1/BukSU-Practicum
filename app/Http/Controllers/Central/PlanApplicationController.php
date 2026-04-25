@@ -9,6 +9,7 @@ use App\Models\TenantDomain;
 use App\Models\TenantPlanApplication;
 use App\Support\Billing\PlanCatalog;
 use App\Support\Billing\StripeCheckout;
+use App\Support\Security\AuditLogger;
 use App\Support\Tenancy\TenantProvisioner;
 use App\Support\Tenancy\TenantUrlGenerator;
 use Illuminate\Support\Carbon;
@@ -254,6 +255,10 @@ class PlanApplicationController extends Controller
             'approval_notes' => $validated['approval_notes'] ?? null,
             'rejection_reason' => null,
         ]);
+        $this->audit($request, 'approved application', $application, null, [
+            'tenant_id' => $tenant->getKey(),
+            'status' => 'approved',
+        ]);
 
         return redirect()->route('central.dashboard', ['section' => 'applications'])
             ->with('status', $application->college_name.' was approved and provisioned successfully.');
@@ -264,11 +269,16 @@ class PlanApplicationController extends Controller
         $validated = $request->validate([
             'rejection_reason' => ['required', 'string', 'max:1000'],
         ]);
+        $oldValues = $application->only(['status', 'rejection_reason']);
 
         $application->update([
             'status' => 'rejected',
             'reviewed_by' => Auth::guard('central_superadmin')->id(),
             'reviewed_at' => now(),
+            'rejection_reason' => $validated['rejection_reason'],
+        ]);
+        $this->audit($request, 'rejected application', $application, $oldValues, [
+            'status' => 'rejected',
             'rejection_reason' => $validated['rejection_reason'],
         ]);
 
@@ -397,5 +407,21 @@ class PlanApplicationController extends Controller
         }
 
         return 'The tenant could not be provisioned. Check your database settings and try again.';
+    }
+
+    protected function audit(Request $request, string $action, TenantPlanApplication $application, ?array $oldValues = null, ?array $newValues = null): void
+    {
+        $actor = Auth::guard('central_superadmin')->user();
+
+        AuditLogger::log(
+            'central_superadmin',
+            $actor?->getKey(),
+            $actor?->name,
+            $action,
+            $application,
+            $oldValues,
+            $newValues,
+            $request,
+        );
     }
 }

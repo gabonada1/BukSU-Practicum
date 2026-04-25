@@ -39,12 +39,15 @@ class TenantUser extends Authenticatable
         'verification_sent_at',
         'registered_at',
         'registered_via_self_service',
+        'password_reset_code',
+        'password_reset_expires_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
         'email_verification_token',
+        'password_reset_code',
     ];
 
     protected function casts(): array
@@ -60,6 +63,7 @@ class TenantUser extends Authenticatable
             'verification_sent_at' => 'datetime',
             'registered_at' => 'datetime',
             'registered_via_self_service' => 'boolean',
+            'password_reset_expires_at' => 'datetime',
         ];
     }
 
@@ -101,6 +105,15 @@ class TenantUser extends Authenticatable
         ])));
 
         return $name !== '' ? $name : (string) $this->name;
+    }
+
+    public function getAuditLabel(): string
+    {
+        return match ($this->role) {
+            'student' => trim($this->full_name) ?: (string) $this->email,
+            'supervisor' => (string) ($this->name ?: $this->email),
+            default => (string) ($this->name ?: $this->email),
+        };
     }
 
     public function canAccessPortal(): bool
