@@ -191,13 +191,12 @@ class SystemUpdateService
 
         if (PHP_OS_FAMILY === 'Windows') {
             $this->runProcess($update, [
-                'powershell',
-                '-NoProfile',
-                '-Command',
-                'Expand-Archive -LiteralPath $args[0] -DestinationPath $args[1] -Force',
+                'tar.exe',
+                '-xf',
                 $downloadPath,
+                '-C',
                 $extractPath,
-            ], 'Release archive extracted with PowerShell.');
+            ], 'Release archive extracted with tar.exe.');
 
             return;
         }
