@@ -1,6 +1,10 @@
 @echo off
 setlocal
 
+if defined npm_node_execpath if exist "%npm_node_execpath%" set "NODE_EXE=%npm_node_execpath%"
+
+if defined NODE_EXE goto :found_node
+
 for /f "delims=" %%I in ('where node.exe 2^>nul') do (
     set "NODE_EXE=%%I"
     goto :found_node
