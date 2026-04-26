@@ -85,6 +85,7 @@ class SystemUpdateService
             }
 
             if ($options['run_npm_build']) {
+                $this->runProcess($update, [$this->binary('npm'), 'install'], 'Frontend dependencies installed.');
                 $this->runProcess($update, [$this->binary('npm'), 'run', 'build'], 'Frontend assets built.');
             }
 
