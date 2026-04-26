@@ -84,9 +84,11 @@ class SystemUpdateService
                 $this->callArtisan($update, 'tenants:seed', [], 'Tenant database seeders completed.');
             }
 
-            if ($options['run_npm_build']) {
+            if ($options['run_npm_build'] && ! $this->hasPrebuiltFrontendAssets()) {
                 $this->runProcess($update, [$this->binary('npm'), 'install', '--production=false'], 'Frontend dependencies installed.');
                 $this->runProcess($update, [$this->binary('npm'), 'run', 'build'], 'Frontend assets built.');
+            } elseif ($options['run_npm_build']) {
+                $this->log($update, 'Frontend build skipped because prebuilt assets are already present.');
             }
 
             $this->cleanup($workingRoot);
@@ -376,6 +378,11 @@ class SystemUpdateService
             'npm' => 'npm.cmd',
             default => $tool,
         };
+    }
+
+    protected function hasPrebuiltFrontendAssets(): bool
+    {
+        return File::exists(public_path('build/manifest.json'));
     }
 
     protected function cleanup(string $path): void
