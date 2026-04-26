@@ -71,14 +71,17 @@ class SystemUpdateService
             $sourcePath = $this->extractReleaseArchive($update, $downloadPath, $extractPath);
             $this->applyRelease($update, $sourcePath, base_path());
 
+            Artisan::call('optimize:clear');
+            $this->log($update, 'Laravel caches cleared.');
+
             if ($options['run_migrations']) {
-                Artisan::call('migrate', ['--force' => true]);
-                $this->log($update, 'Database migrations completed.');
+                $this->callArtisan($update, 'migrate', ['--force' => true], 'Central database migrations completed.');
+                $this->callArtisan($update, 'tenants:migrate', [], 'Tenant database migrations completed.');
             }
 
             if ($options['run_seeders']) {
-                Artisan::call('db:seed', ['--force' => true]);
-                $this->log($update, 'Database seeders completed.');
+                $this->callArtisan($update, 'db:seed', ['--force' => true], 'Central database seeders completed.');
+                $this->callArtisan($update, 'tenants:seed', [], 'Tenant database seeders completed.');
             }
 
             if ($options['run_npm_build']) {
@@ -302,6 +305,24 @@ class SystemUpdateService
             $message = trim($result->errorOutput() ?: $result->output());
 
             throw new RuntimeException($message !== '' ? $message : 'A system command failed during the update.');
+        }
+
+        $this->log($update, $successMessage);
+    }
+
+    protected function callArtisan(SystemUpdate $update, string $command, array $parameters, string $successMessage): void
+    {
+        $this->log($update, 'Running artisan command: '.$command);
+
+        $exitCode = Artisan::call($command, $parameters);
+        $output = trim(Artisan::output());
+
+        if ($output !== '') {
+            $this->log($update, $output);
+        }
+
+        if ($exitCode !== 0) {
+            throw new RuntimeException($output !== '' ? $output : "Artisan command [{$command}] failed.");
         }
 
         $this->log($update, $successMessage);
