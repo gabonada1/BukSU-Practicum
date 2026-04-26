@@ -167,6 +167,12 @@ class SystemUpdateService
     {
         File::ensureDirectoryExists($extractPath);
 
+        if (! class_exists(ZipArchive::class)) {
+            $this->extractReleaseArchiveWithSystemTool($update, $downloadPath, $extractPath);
+
+            return $this->releaseSourcePath($update, $extractPath);
+        }
+
         $archive = new ZipArchive();
 
         if ($archive->open($downloadPath) !== true) {
@@ -176,6 +182,38 @@ class SystemUpdateService
         $archive->extractTo($extractPath);
         $archive->close();
 
+        return $this->releaseSourcePath($update, $extractPath);
+    }
+
+    protected function extractReleaseArchiveWithSystemTool(SystemUpdate $update, string $downloadPath, string $extractPath): void
+    {
+        $this->log($update, 'PHP ZipArchive is unavailable; using the system archive extractor.');
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->runProcess($update, [
+                'powershell',
+                '-NoProfile',
+                '-Command',
+                'Expand-Archive -LiteralPath $args[0] -DestinationPath $args[1] -Force',
+                $downloadPath,
+                $extractPath,
+            ], 'Release archive extracted with PowerShell.');
+
+            return;
+        }
+
+        $this->runProcess($update, [
+            'unzip',
+            '-q',
+            '-o',
+            $downloadPath,
+            '-d',
+            $extractPath,
+        ], 'Release archive extracted with unzip.');
+    }
+
+    protected function releaseSourcePath(SystemUpdate $update, string $extractPath): string
+    {
         $directories = File::directories($extractPath);
         $sourcePath = count($directories) === 1 && empty(File::files($extractPath))
             ? $directories[0]
