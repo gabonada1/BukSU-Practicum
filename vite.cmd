@@ -16,19 +16,31 @@ if not defined NODE_EXE (
     exit /b 1
 )
 
+if defined npm_execpath set "NPM_CLI=%npm_execpath%"
+
+if defined NPM_CLI goto :found_npm
+
 for /f "delims=" %%I in ('where npm.cmd 2^>nul') do (
     set "NPM_CMD=%%I"
     goto :found_npm
 )
 
+if exist "%ProgramFiles%\nodejs\npm.cmd" set "NPM_CMD=%ProgramFiles%\nodejs\npm.cmd"
+if not defined NPM_CMD if exist "%ProgramFiles(x86)%\nodejs\npm.cmd" set "NPM_CMD=%ProgramFiles(x86)%\nodejs\npm.cmd"
+if not defined NPM_CMD if exist "%LocalAppData%\Programs\nodejs\npm.cmd" set "NPM_CMD=%LocalAppData%\Programs\nodejs\npm.cmd"
+
 :found_npm
-if not defined NPM_CMD (
-    echo npm.cmd could not be found. Install Node.js or add npm.cmd to PATH.
+if not defined NPM_CLI if not defined NPM_CMD (
+    echo npm could not be found. Install Node.js or add npm to PATH.
     exit /b 1
 )
 
 if not exist "%~dp0node_modules\vite\bin\vite.js" (
-    call "%NPM_CMD%" install --production=false
+    if defined NPM_CLI (
+        call "%NODE_EXE%" "%NPM_CLI%" install --production=false
+    ) else (
+        call "%NPM_CMD%" install --production=false
+    )
     if errorlevel 1 exit /b %errorlevel%
 )
 
