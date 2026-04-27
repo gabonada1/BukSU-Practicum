@@ -172,7 +172,11 @@
                 <button type="button" class="profile-action-button" data-modal-open="password-modal">Change Password</button>
 
                 @if ($profileRole === 'admin')
+                    @if ($canCustomizeBranding)
                     <button type="button" class="profile-action-button" data-modal-open="branding-modal">Customize UI</button>
+                    @else
+                    <button type="button" class="profile-action-button" disabled title="Available on Pro and Premium plans">Customize UI</button>
+                    @endif
                     <button type="button" class="profile-action-button" data-modal-open="ojt-settings-modal">Edit OJT Settings</button>
                     <button type="button" class="profile-action-button" data-modal-open="course-create-modal">Add Course</button>
                 @endif
@@ -376,7 +380,7 @@
         </div>
     </div>
 
-    @if ($profileRole === 'admin')
+    @if ($profileRole === 'admin' && $canCustomizeBranding)
         <div id="branding-modal" class="modal-shell" hidden aria-hidden="true">
             <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="branding-modal-title">
                 <div class="modal-header">
@@ -544,6 +548,9 @@
             </div>
         </div>
 
+    @endif
+
+    @if ($profileRole === 'admin')
         <div id="ojt-settings-modal" class="modal-shell" hidden aria-hidden="true">
             <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="ojt-settings-modal-title">
                 <div class="modal-header">
@@ -848,7 +855,7 @@
                 openProfileModal('password-modal');
             }
 
-            if (hasBrandingErrors) {
+            if (hasBrandingErrors && brandingForm) {
                 window.location.hash = 'portal-branding';
                 openProfileModal('branding-modal');
             }
@@ -870,4 +877,3 @@
         });
     </script>
 @endsection
-

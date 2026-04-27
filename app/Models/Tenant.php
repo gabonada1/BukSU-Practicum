@@ -104,6 +104,11 @@ class Tenant extends Model
             && ! $this->subscriptionIsExpired();
     }
 
+    public function canCustomizeBranding(): bool
+    {
+        return in_array(strtolower((string) $this->plan), ['pro', 'premium'], true);
+    }
+
     public function subscriptionStatus(): string
     {
         if (! $this->is_active) {

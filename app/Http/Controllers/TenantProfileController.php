@@ -46,6 +46,7 @@ class TenantProfileController extends Controller
             'profileUser' => $user,
             'courses' => $courses,
             'brandingSettings' => $brandingSettings,
+            'canCustomizeBranding' => $tenant->canCustomizeBranding(),
             'ojtSettings' => $this->ojtSettings($tenant),
             'profileUpdateAction' => $this->tenantRoute($tenant, $this->profileRouteName($role, 'profile.update')),
             'passwordUpdateAction' => $this->tenantRoute($tenant, $this->profileRouteName($role, 'profile.password.update')),
@@ -164,6 +165,7 @@ class TenantProfileController extends Controller
 
         abort_unless($tenant, 404);
         abort_unless(Auth::guard('tenant_admin')->check(), 403);
+        abort_unless($tenant->canCustomizeBranding(), 403);
 
         $validated = $request->validate([
             'portal_title' => ['required', 'string', 'max:120'],
