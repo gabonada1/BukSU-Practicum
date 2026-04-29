@@ -2,7 +2,7 @@
     $layoutMode = $layoutMode ?? 'dashboard';
     $hideCentralHeader = $hideCentralHeader ?? ($layoutMode === 'login');
     $centralActor = auth('central_superadmin')->user();
-    $systemLogo = asset('images/logos/logo.jpg');
+    $systemLogo = asset('images/logos/logo.jpeg');
     $centralCurrentSection = request()->query('section', 'overview');
     $centralNavigation = [
         ['label' => 'Overview', 'href' => route('central.dashboard').'?section=overview', 'active' => request()->routeIs('central.dashboard') && $centralCurrentSection === 'overview', 'meta' => 'System pulse', 'icon' => 'fa-chart-line'],
@@ -36,11 +36,11 @@
                     <aside class="app-sidebar">
                         <div class="app-sidebar-header">
                             <div class="app-brand-mark">
-                                <img src="{{ $systemLogo }}" alt="Bukidnon State University Logo">
+                                <img src="{{ $systemLogo }}" alt="University Practicum Logo">
                             </div>
                             <div class="app-brand-copy">
                                 <span class="app-brand-kicker">Central Console</span>
-                                <strong class="app-brand-title">BukSU Admin</strong>
+                                <strong class="app-brand-title">University Practicum</strong>
                                 <p class="app-brand-subtitle">University-level practicum operations</p>
                             </div>
                         </div>

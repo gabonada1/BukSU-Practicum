@@ -558,9 +558,9 @@
         @foreach ($auditLogPages as $pageIndex => $pageLogs)
             <section class="audit-print-page">
                 <header class="audit-print-header">
-                    <img src="{{ asset('images/logos/logo.jpg') }}" alt="Bukidnon State University Logo">
+                    <img src="{{ asset('images/logos/logo.jpeg') }}" alt="University Practicum Logo">
                     <div>
-                        <strong>Bukidnon State University</strong>
+                        <strong>University Practicum</strong>
                         <h1>Audit Logs Report</h1>
                         <p>Prepared by {{ $centralActor?->name ?: 'Central Superadmin' }} · Generated {{ now()->format('M d, Y h:i A') }}</p>
                     </div>

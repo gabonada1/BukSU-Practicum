@@ -1,7 +1,7 @@
 @php
     $layoutMode = 'login';
     $hideCentralHeader = true;
-    $systemLogo = asset('images/logos/logo.jpg');
+    $systemLogo = asset('images/logos/logo.jpeg');
 @endphp
 
 @extends('layouts.central')
@@ -10,10 +10,10 @@
     <article class="auth-card">
         <div class="auth-brand">
             <div class="auth-brand-logo">
-                <img src="{{ $systemLogo }}" alt="Bukidnon State University Logo">
+                <img src="{{ $systemLogo }}" alt="University Practicum Logo">
             </div>
             <span class="app-section-kicker">Central Access</span>
-            <h1>BukSU Admin System</h1>
+            <h1>University Practicum Admin System</h1>
             <p>Sign in to the university-wide dashboard for tenant approvals, subscriptions, and platform oversight.</p>
         </div>
 

@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
         CentralSuperadmin::query()->updateOrCreate(
             ['email' => env('CENTRAL_SUPERADMIN_EMAIL', 'superadmin@localhost')],
             [
-                'name' => env('CENTRAL_SUPERADMIN_NAME', 'BukSU University Admin'),
+                'name' => env('CENTRAL_SUPERADMIN_NAME', 'University Practicum Admin'),
                 'password' => env('CENTRAL_SUPERADMIN_PASSWORD', 'password123'),
             ]
         );

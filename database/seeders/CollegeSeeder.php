@@ -82,7 +82,7 @@ class CollegeSeeder extends Seeder
                     'settings' => [
                         'focus' => $college['name'],
                         'branding' => [
-                            'portal_title' => 'BukSU Practicum Portal',
+                            'portal_title' => 'University Practicum',
                             'accent' => '#7B1C2E',
                             'secondary' => '#F5A623',
                             'logo_path' => null,

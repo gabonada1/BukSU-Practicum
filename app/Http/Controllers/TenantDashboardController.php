@@ -80,7 +80,7 @@ class TenantDashboardController extends Controller
             'databaseStrategy' => [
                 'The University Administration database stores the university registry, license tiers, platform settings, and shared authentication hooks.',
                 'Each university portal uses a dedicated database for partner companies, student applications, forms and requirements, progress reports, and evaluation forms.',
-                'The sample tenant uses Bukidnon State University - College of Technologies.',
+                'The sample tenant uses University Practicum - College of Technologies.',
             ],
             'stats' => [
                 'companies' => $allCompanies->count(),

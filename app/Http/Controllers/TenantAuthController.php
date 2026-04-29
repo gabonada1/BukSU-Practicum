@@ -128,7 +128,7 @@ class TenantAuthController extends Controller
         return match ($role) {
             'student' => 'This student account is suspended or still waiting for email verification.',
             'supervisor' => 'This company supervisor account is suspended or still waiting for email verification.',
-            default => 'This internship coordinator account is suspended. Please contact Bukidnon State University Administration.',
+            default => 'This internship coordinator account is suspended. Please contact University Practicum Administration.',
         };
     }
 

@@ -64,7 +64,7 @@ class PlanApplicationController extends Controller
             $mailFailures = $this->sendPendingApprovalNotifications($application);
 
             $response = redirect()->route('app.entry')
-                ->with('status', 'Local development checkout bypassed. The plan application is marked paid and is now waiting for Bukidnon State University approval.');
+                ->with('status', 'Local development checkout bypassed. The plan application is marked paid and is now waiting for University Practicum approval.');
 
             if ($mailFailures !== []) {
                 $response->withErrors([
@@ -165,7 +165,7 @@ class PlanApplicationController extends Controller
         $mailFailures = $this->sendPendingApprovalNotifications($application);
 
         $response = redirect()->route('app.entry')
-            ->with('status', 'Payment received. Your plan application is now waiting for Bukidnon State University approval. The tenant portal and coordinator credentials will only be created after approval.');
+            ->with('status', 'Payment received. Your plan application is now waiting for University Practicum approval. The tenant portal and coordinator credentials will only be created after approval.');
 
         if ($mailFailures !== []) {
             $response->withErrors([

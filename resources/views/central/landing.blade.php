@@ -1,7 +1,7 @@
 @php
     $layoutMode = 'dashboard';
     $hideCentralHeader = true;
-    $systemLogo = asset('images/logos/logo.jpg');
+    $systemLogo = asset('images/logos/logo.jpeg');
     $showApplicationModal = $errors->any() || old('college_name') || old('contact_name') || old('admin_email');
     $rolloutSteps = [
         [
@@ -72,7 +72,7 @@
                 <div class="landing-portal-preview">
                     <div class="landing-preview-header">
                         <div class="landing-preview-logo">
-                            <img src="{{ $systemLogo }}" alt="Bukidnon State University Logo">
+                            <img src="{{ $systemLogo }}" alt="University Practicum Logo">
                         </div>
                         <div>
                             <span>Tenant Portal</span>
@@ -270,7 +270,7 @@
                     <div class="form-grid">
                         <label>
                             University Name
-                            <input type="text" name="college_name" value="{{ old('college_name') }}" placeholder="Bukidnon State University - College of Technologies" required>
+                            <input type="text" name="college_name" value="{{ old('college_name') }}" placeholder="University Practicum - College of Technologies" required>
                         </label>
                         <label>
                             Contact Person

@@ -12,7 +12,7 @@
         : '';
     $systemLogo = $tenantLogoPath
         ? asset($tenantLogoPath).$tenantLogoVersion
-        : asset('images/logos/logo.jpg');
+        : asset('images/logos/logo.jpeg');
     $tenantRole = $tenantRole ?? match (true) {
         request()->routeIs('tenant*.admin.*') => 'admin',
         request()->routeIs('tenant*.supervisor.*') => 'supervisor',

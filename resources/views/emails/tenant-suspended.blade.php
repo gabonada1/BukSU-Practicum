@@ -26,6 +26,5 @@
         </tr>
     </table>
 
-    <p>Please contact Bukidnon State University Administration to reactivate the university portal.</p>
+    <p>Please contact University Practicum Administration to reactivate the university portal.</p>
 </x-email-shell>
-

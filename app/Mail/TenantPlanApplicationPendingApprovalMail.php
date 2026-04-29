@@ -21,7 +21,7 @@ class TenantPlanApplicationPendingApprovalMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Stripe payment received - waiting for Bukidnon State University approval | '.$this->application->college_name,
+            subject: 'Stripe payment received - waiting for University Practicum approval | '.$this->application->college_name,
         );
     }
 

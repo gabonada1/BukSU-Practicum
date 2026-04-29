@@ -42,7 +42,7 @@ class CentralDashboardController extends Controller
         });
 
         return view('central.dashboard', [
-            'pageTitle' => 'Bukidnon State University Administration | '.config('app.name', 'University Practicum'),
+            'pageTitle' => 'University Practicum Administration | '.config('app.name', 'University Practicum'),
             'tenants' => $tenants,
             'applications' => $applications,
             'plans' => PlanCatalog::all(),

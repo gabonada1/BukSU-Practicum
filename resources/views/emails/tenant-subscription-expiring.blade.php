@@ -26,6 +26,5 @@
         </tr>
     </table>
 
-    <p>Please coordinate with Bukidnon State University Administration before the deadline to keep the university portal accessible.</p>
+    <p>Please coordinate with University Practicum Administration before the deadline to keep the university portal accessible.</p>
 </x-email-shell>
-

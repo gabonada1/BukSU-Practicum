@@ -129,7 +129,7 @@ class Tenant extends Model
     public function subscriptionBlockMessage(): string
     {
         return match ($this->subscriptionStatus()) {
-            'suspended' => 'This university portal\'s access to the practicum platform has been suspended. Please contact Bukidnon State University Administration.',
+            'suspended' => 'This university portal\'s access to the practicum platform has been suspended. Please contact University Practicum Administration.',
             'scheduled' => 'Access to this university portal has not been activated yet.',
             'expired' => 'This university portal\'s access has expired. Please contact University Administration for renewal.',
             default => 'This university portal is currently unavailable.',
