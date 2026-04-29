@@ -71,8 +71,8 @@ class SystemUpdateService
             $sourcePath = $this->extractReleaseArchive($update, $downloadPath, $extractPath);
             $this->applyRelease($update, $sourcePath, base_path());
 
-            Artisan::call('optimize:clear');
-            $this->log($update, 'Laravel caches cleared.');
+            $this->callArtisan($update, 'optimize:clear', [], 'Laravel caches cleared.');
+            $this->callArtisan($update, 'view:clear', [], 'Laravel view cache cleared.');
 
             if ($options['run_migrations']) {
                 $this->callArtisan($update, 'migrate', ['--force' => true], 'Central database migrations completed.');
