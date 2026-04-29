@@ -3551,6 +3551,21 @@ ul.clean-list {
     min-height: 94px;
 }
 
+.tenant-update-form {
+    display: grid;
+    gap: 18px;
+}
+
+.tenant-update-form-header {
+    align-items: center;
+}
+
+.tenant-update-apply-button {
+    width: auto;
+    min-width: 148px;
+    flex: 0 0 auto;
+}
+
 .update-sync-form {
     flex: 0 0 auto;
     margin-top: 2px;

@@ -38,7 +38,8 @@ class TenantReleaseController extends Controller
             ->where('status', 'published')
             ->latest('published_at')
             ->latest()
-            ->get();
+            ->paginate(5, ['*'], 'releases_page')
+            ->withQueryString();
 
         $tenantUpdates = SystemUpdate::query()
             ->latest()
