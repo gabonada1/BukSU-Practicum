@@ -115,6 +115,7 @@ When Bukidnon State University Administration registers a new university portal 
 | NEMSU | N | PREMIUM | nemsu, nemsu.localhost | 18a0211aa63774306acaf2ae | Active |
 | NEMSU | N | BASIC | ustp, ustp.localhost | 9b73a7218dacaafeef6e916e | Active |
 | NEMSU | N | PREMIUM | buksu, buksu.localhost | 6c698d4579ee73e213cb5ebf | Active |
+| NEMSU | N | PREMIUM | n/a | 7a22a30998ddd8b0bf6001ea | Active |
 
 ## 8. Seeded Local Credentials
 
