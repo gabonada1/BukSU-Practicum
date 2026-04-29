@@ -6,8 +6,12 @@
         ? $tenantBranding['portal_title']
         : config('app.name', 'University Practicum');
     $tenantCurrentVersion = data_get($tenant->settings, 'release_preferences.preferred_release_version', config('app.version', '1.0.0'));
-    $systemLogo = filled($tenantBranding['logo_path'] ?? null)
-        ? asset($tenantBranding['logo_path'])
+    $tenantLogoPath = filled($tenantBranding['logo_path'] ?? null) ? ltrim((string) $tenantBranding['logo_path'], '/\\') : null;
+    $tenantLogoVersion = $tenantLogoPath && file_exists(public_path($tenantLogoPath))
+        ? '?v='.filemtime(public_path($tenantLogoPath))
+        : '';
+    $systemLogo = $tenantLogoPath
+        ? asset($tenantLogoPath).$tenantLogoVersion
         : asset('images/logos/logo.jpg');
     $tenantRole = $tenantRole ?? match (true) {
         request()->routeIs('tenant*.admin.*') => 'admin',
@@ -110,7 +114,11 @@
                     <aside class="app-sidebar">
                         <div class="app-sidebar-header">
                             <div class="app-brand-mark">
-                                <img src="{{ $systemLogo }}" alt="{{ $tenantPortalTitle }} Logo">
+                                @if ($tenantLogoPath)
+                                    <img src="{{ $systemLogo }}" alt="{{ $tenantPortalTitle }} Logo">
+                                @else
+                                    <span>{{ strtoupper(substr((string) ($tenant->code ?: $tenant->name), 0, 1)) }}</span>
+                                @endif
                             </div>
                             <div class="app-brand-copy">
                                 <span class="app-brand-kicker">Tenant Portal</span>

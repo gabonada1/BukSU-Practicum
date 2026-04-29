@@ -69,14 +69,38 @@
             </div>
 
             <div class="landing-hero-visual landing-hero-panel">
-                <div class="landing-orbit-card">
-                    <div class="landing-orbit-center">
-                        <img src="{{ $systemLogo }}" alt="Bukidnon State University Logo">
+                <div class="landing-portal-preview">
+                    <div class="landing-preview-header">
+                        <div class="landing-preview-logo">
+                            <img src="{{ $systemLogo }}" alt="Bukidnon State University Logo">
+                        </div>
+                        <div>
+                            <span>Tenant Portal</span>
+                            <strong>OJT Operations</strong>
+                        </div>
                     </div>
-                    <span class="orbit-node orbit-node-a">Students</span>
-                    <span class="orbit-node orbit-node-b">Coordinators</span>
-                    <span class="orbit-node orbit-node-c">Supervisors</span>
-                    <span class="orbit-node orbit-node-d">Companies</span>
+
+                    <div class="landing-preview-flow">
+                        <span>Applications</span>
+                        <span>Requirements</span>
+                        <span>Hour Logs</span>
+                        <span>Supervisor Review</span>
+                    </div>
+
+                    <div class="landing-preview-list">
+                        <div>
+                            <strong>Students</strong>
+                            <span>Submit applications and upload requirements</span>
+                        </div>
+                        <div>
+                            <strong>Coordinators</strong>
+                            <span>Review records, courses, hours, and approvals</span>
+                        </div>
+                        <div>
+                            <strong>Supervisors</strong>
+                            <span>Monitor assigned interns and validate logs</span>
+                        </div>
+                    </div>
                 </div>
                 <article class="hero-stat hero-stat-primary">
                     <span>Active Tenants</span>
@@ -172,11 +196,6 @@
                         <div>
                             <h2>{{ $plan['label'] }}</h2>
                             <p>{{ $plan['summary'] }}</p>
-                        </div>
-
-                        <div class="plan-fit">
-                            <strong>{{ $plan['student_limit'] ?? 'Flexible student capacity' }}</strong>
-                            <span>{{ $plan['best_for'] ?? 'Designed for university practicum teams.' }}</span>
                         </div>
 
                         <ul class="clean-list landing-plan-feature-list">
