@@ -180,7 +180,7 @@
         <section class="dashboard-grid">
             @if ($reviewingApplication)
                 @php
-                    $suggestedSubdomain = \App\Http\Controllers\Central\PlanApplicationController::suggestedSubdomain($reviewingApplication->college_name);
+                    $suggestedSubdomain = \App\Http\Controllers\Central\PlanApplicationController::suggestedAvailableSubdomain($reviewingApplication->college_name);
                     $suggestedDatabase = \App\Http\Controllers\Central\PlanApplicationController::suggestedDatabaseName(
                         $reviewingApplication->college_name,
                         $reviewingApplication->admin_email,
@@ -212,7 +212,18 @@
                         </article>
                     </div>
 
-                    <form method="POST" action="{{ route('central.plan-applications.approve', $reviewingApplication) }}">
+                    @if ($errors->any())
+                        <div class="error-panel">
+                            <strong>Approval not completed.</strong>
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('central.plan-applications.approve', $reviewingApplication) }}" data-submitting-label="Provisioning tenant...">
                         @csrf
                         <div class="form-grid">
                             <label>
@@ -238,7 +249,7 @@
                         </div>
 
                         <div class="hero-actions">
-                            <button type="submit">Approve and Provision Tenant</button>
+                            <button type="submit" data-submit-button>Approve and Provision Tenant</button>
                         </div>
                     </form>
 
@@ -347,7 +358,7 @@
                             <label>College Name <input type="text" name="name" value="{{ old('name', $editingTenant->name) }}" required></label>
                             <label>
                                 License Tier
-                                <select name="plan" required>
+                                <select name="plan" required data-plan-select>
                                     @foreach ($plans as $planKey => $plan)
                                         <option value="{{ $planKey }}" @selected(old('plan', $editingTenant->plan) === $planKey)>{{ $plan['label'] }}</option>
                                     @endforeach
@@ -362,8 +373,8 @@
                             </label>
                             <label>Subscription Starts <input type="date" name="subscription_starts_at" value="{{ old('subscription_starts_at', $editingTenant->subscription_starts_at?->toDateString()) }}" required></label>
                             <label>Subscription Expires <input type="date" name="subscription_expires_at" value="{{ old('subscription_expires_at', $editingTenant->subscription_expires_at?->toDateString()) }}"></label>
-                            <label>Bandwidth Allocation (GB) <input type="number" min="1" step="1" name="bandwidth_limit_gb" value="{{ old('bandwidth_limit_gb', $editingBandwidth['limit_gb'] ?? $planBandwidthDefaults[$editingTenant->plan] ?? 150) }}" required></label>
-                            <label>Current Usage (GB) <input type="number" min="0" step="0.1" name="bandwidth_used_gb" value="{{ old('bandwidth_used_gb', $editingBandwidth['used_gb'] ?? 0) }}"></label>
+                            <label>Bandwidth Allocation (GB) <input type="number" min="1" step="1" name="bandwidth_limit_gb" value="{{ old('bandwidth_limit_gb', $editingBandwidth['limit_gb'] ?? $planBandwidthDefaults[$editingTenant->plan] ?? 150) }}" required data-bandwidth-limit></label>
+                            <label>Current Usage (GB) <input type="number" min="0" step="0.1" name="bandwidth_used_gb" value="{{ old('bandwidth_used_gb', $editingBandwidth['used_gb'] ?? 0) }}" data-bandwidth-used></label>
                             <label>Coordinator Name <input type="text" name="admin_name" value="{{ old('admin_name', $editingContact['name']) }}" placeholder="Internship Coordinator"></label>
                             <label>Coordinator Email <input type="email" name="admin_email" value="{{ old('admin_email', $editingContact['email']) }}" required></label>
                             <label>Tenant Code <input type="text" value="{{ $editingTenant->code }}" readonly></label>
@@ -646,6 +657,29 @@
                 if (event.key === 'Escape' && modal && !modal.hasAttribute('hidden')) {
                     closeAuditModal();
                 }
+            });
+
+            const planBandwidthDefaults = @json($planBandwidthDefaults);
+            document.querySelectorAll('[data-plan-select]').forEach(function (planSelect) {
+                const form = planSelect.closest('form');
+                const bandwidthInput = form?.querySelector('[data-bandwidth-limit]');
+                const usedInput = form?.querySelector('[data-bandwidth-used]');
+
+                if (! bandwidthInput) {
+                    return;
+                }
+
+                planSelect.addEventListener('change', function () {
+                    const nextLimit = planBandwidthDefaults[planSelect.value];
+
+                    if (nextLimit) {
+                        bandwidthInput.value = nextLimit;
+
+                        if (usedInput && Number(usedInput.value) > Number(nextLimit)) {
+                            usedInput.value = nextLimit;
+                        }
+                    }
+                });
             });
         });
     </script>

@@ -24,6 +24,7 @@ class AuditLogReader
 
         return $this->entries()
             ->filter(fn (array $entry) => (string) ($entry['tenant_id'] ?? '') === $tenantId)
+            ->reject(fn (array $entry) => ($entry['raw_actor_type'] ?? null) === 'central_superadmin')
             ->sortByDesc('timestamp')
             ->take($limit)
             ->values();
@@ -69,6 +70,7 @@ class AuditLogReader
                     'tenant_id' => $tenantId,
                     'tenant' => $payload['tenant_name'] ?? ($tenantId ? $tenantNames->get((string) $tenantId, 'Tenant #'.$tenantId) : 'Central'),
                     'actor' => $payload['actor_name'] ?: str($payload['actor_type'] ?? 'system')->replace('_', ' ')->title()->toString(),
+                    'raw_actor_type' => $payload['actor_type'] ?? 'system',
                     'actor_type' => str($payload['actor_type'] ?? 'system')->replace('_', ' ')->title()->toString(),
                     'action' => str($payload['action'] ?? 'activity')->replace('_', ' ')->title()->toString(),
                     'subject' => $subjectName,

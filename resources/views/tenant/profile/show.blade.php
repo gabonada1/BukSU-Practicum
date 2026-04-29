@@ -59,6 +59,9 @@
     $profileSubtitle = $profileRole === 'admin'
         ? 'Internship Coordinator account for '.$tenant->name
         : ($profileRole === 'supervisor' ? 'Company Supervisor account for '.$tenant->name : 'Student account for '.$tenant->name);
+    $currentPlan = \App\Support\Billing\PlanCatalog::find(strtolower((string) $tenant->plan));
+    $currentPlanLabel = $currentPlan['label'] ?? str($tenant->plan ?: 'basic')->title();
+    $currentPlanSummary = $currentPlan['summary'] ?? 'Active tenant subscription plan.';
 @endphp
 
 @extends('layouts.tenant')
@@ -153,6 +156,10 @@
                         <strong>{{ $tenant->name }}</strong>
                     </div>
                     <div class="profile-detail-card">
+                        <span>Current Plan</span>
+                        <strong>{{ $currentPlanLabel }}</strong>
+                    </div>
+                    <div class="profile-detail-card">
                         <span>Portal Title</span>
                         <strong>{{ $brandingSettings['portal_title'] }}</strong>
                     </div>
@@ -187,6 +194,10 @@
             @if ($profileRole === 'admin')
                 <div class="profile-mini-grid">
                     <div class="profile-detail-card">
+                        <span>Plan Access</span>
+                        <strong>{{ $currentPlanLabel }}</strong>
+                    </div>
+                    <div class="profile-detail-card">
                         <span>Accent</span>
                         <strong>{{ strtoupper($brandingSettings['accent']) }}</strong>
                     </div>
@@ -203,6 +214,7 @@
                         <strong>{{ $courses->count() }}</strong>
                     </div>
                 </div>
+                <p class="profile-plan-summary">{{ $currentPlanSummary }}</p>
             @endif
         </article>
     </section>

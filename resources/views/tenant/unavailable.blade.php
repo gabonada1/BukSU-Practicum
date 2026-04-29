@@ -19,21 +19,22 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>University Portal Unavailable</title>
+        @include('layouts.partials.app-theme')
         <style>
             :root {
-                --page: #f5f7fb;
-                --page-alt: #e9eef8;
-                --shell: rgba(255, 255, 255, 0.92);
-                --panel: #ffffff;
-                --panel-soft: #eef3fb;
-                --card-ink: #14213d;
-                --card-muted: #65728a;
-                --accent: #7B1C2E;
-                --accent-strong: #5E1423;
-                --warm: #e8a328;
-                --danger: #d07070;
-                --success: #6db88a;
-                --shadow: 0 24px 60px rgba(31, 46, 84, 0.14);
+                --page: var(--app-page);
+                --page-alt: var(--app-page-alt);
+                --shell: var(--app-panel);
+                --panel: var(--app-surface);
+                --panel-soft: var(--app-panel-soft);
+                --card-ink: var(--app-text);
+                --card-muted: var(--app-text-muted);
+                --accent: var(--app-primary);
+                --accent-strong: var(--app-primary-strong);
+                --warm: var(--app-warning);
+                --danger: var(--app-danger);
+                --success: var(--app-success);
+                --shadow: var(--app-shadow);
             }
 
             * {
@@ -46,8 +47,8 @@
                 padding: 32px 24px;
                 font-family: "Segoe UI", "Trebuchet MS", sans-serif;
                 background:
-                    radial-gradient(circle at top left, rgba(123, 28, 46, 0.1), transparent 28%),
-                    radial-gradient(circle at bottom right, rgba(44, 91, 180, 0.12), transparent 26%),
+                    radial-gradient(circle at top left, var(--app-primary-glow), transparent 30%),
+                    radial-gradient(circle at bottom right, rgba(115, 199, 182, 0.12), transparent 28%),
                     linear-gradient(180deg, var(--page), var(--page-alt));
                 color: var(--card-ink);
             }
@@ -61,9 +62,11 @@
 
             .panel {
                 padding: 34px;
-                border-radius: 28px;
-                background: linear-gradient(180deg, var(--shell), var(--panel));
-                border: 1px solid rgba(103, 116, 150, 0.18);
+                border-radius: var(--app-radius-xl);
+                background:
+                    radial-gradient(circle at top right, var(--app-primary-glow), transparent 36%),
+                    linear-gradient(180deg, var(--app-surface), var(--app-page-alt));
+                border: 1px solid var(--app-border);
                 box-shadow: var(--shadow);
             }
 
@@ -76,9 +79,9 @@
                 font-weight: 700;
                 letter-spacing: 0.14em;
                 text-transform: uppercase;
-                color: var(--accent);
-                background: rgba(123, 28, 46, 0.08);
-                border: 1px solid rgba(123, 28, 46, 0.14);
+                color: var(--app-text);
+                background: var(--app-primary-soft);
+                border: 1px solid var(--app-border-strong);
             }
 
             h1,
@@ -115,9 +118,9 @@
 
             .meta div {
                 padding: 14px 16px;
-                border-radius: 18px;
+                border-radius: var(--app-radius-md);
                 background: var(--panel-soft);
-                border: 1px solid rgba(103, 116, 150, 0.14);
+                border: 1px solid var(--app-border);
                 color: var(--card-muted);
             }
 
@@ -128,9 +131,9 @@
             }
 
             .status {
-                color: #7b1c2e;
-                background: rgba(123, 28, 46, 0.08);
-                border: 1px solid rgba(123, 28, 46, 0.16);
+                color: var(--app-text);
+                background: rgba(217, 107, 122, 0.12);
+                border: 1px solid rgba(217, 107, 122, 0.28);
             }
 
             .cta-card {
@@ -146,7 +149,7 @@
                 gap: 10px;
                 min-height: 48px;
                 padding: 12px 18px;
-                border-radius: 16px;
+                border-radius: var(--app-radius-sm);
                 border: 1px solid transparent;
                 background: linear-gradient(135deg, var(--accent), var(--accent-strong));
                 color: #fff;
@@ -154,32 +157,32 @@
                 font-weight: 700;
                 letter-spacing: 0.02em;
                 text-decoration: none;
-                box-shadow: 0 12px 24px rgba(94, 20, 35, 0.24);
+                box-shadow: 0 12px 24px var(--app-primary-glow);
             }
 
             .button.secondary {
-                background: #f7f9fd;
-                border-color: rgba(103, 116, 150, 0.16);
+                background: var(--app-panel-soft);
+                border-color: var(--app-border);
                 color: var(--card-ink);
                 box-shadow: none;
             }
 
             .helper {
                 padding: 16px 18px;
-                border-radius: 18px;
-                background: rgba(44, 91, 180, 0.08);
-                border: 1px solid rgba(44, 91, 180, 0.12);
+                border-radius: var(--app-radius-md);
+                background: var(--app-panel-soft);
+                border: 1px solid var(--app-border);
             }
 
             .license-wordmark {
                 width: 58px;
                 height: 58px;
-                border-radius: 18px;
+                border-radius: var(--app-radius-md);
                 display: grid;
                 place-items: center;
                 margin-bottom: 16px;
-                background: linear-gradient(145deg, rgba(123, 28, 46, 0.12), rgba(44, 91, 180, 0.12));
-                color: var(--accent);
+                background: linear-gradient(145deg, rgba(217, 107, 122, 0.18), var(--app-primary-soft));
+                color: var(--app-danger);
                 font-size: 24px;
             }
 
@@ -191,17 +194,19 @@
 
             .plan-card {
                 padding: 24px 22px;
-                border-radius: 24px;
-                background: linear-gradient(180deg, #ffffff, #f8faff);
-                border: 1px solid rgba(103, 116, 150, 0.16);
+                border-radius: var(--app-radius-lg);
+                background:
+                    radial-gradient(circle at top right, var(--app-primary-glow), transparent 34%),
+                    linear-gradient(180deg, var(--app-surface), var(--app-page-alt));
+                border: 1px solid var(--app-border);
                 box-shadow: var(--shadow);
                 display: grid;
                 gap: 16px;
             }
 
             .plan-card.active {
-                border-color: rgba(123, 28, 46, 0.34);
-                box-shadow: 0 22px 44px rgba(94, 20, 35, 0.13);
+                border-color: var(--app-border-strong);
+                box-shadow: 0 22px 44px var(--app-primary-glow);
             }
 
             .plan-top {
@@ -228,15 +233,15 @@
                 font-weight: 700;
                 letter-spacing: 0.14em;
                 text-transform: uppercase;
-                background: rgba(44, 91, 180, 0.08);
-                border: 1px solid rgba(44, 91, 180, 0.12);
-                color: #2c4f90;
+                background: var(--app-primary-soft);
+                border: 1px solid var(--app-border-strong);
+                color: var(--app-text);
             }
 
             .plan-card.active .plan-badge {
-                background: rgba(123, 28, 46, 0.16);
-                border-color: rgba(123, 28, 46, 0.24);
-                color: #7b1c2e;
+                background: rgba(217, 107, 122, 0.14);
+                border-color: rgba(217, 107, 122, 0.28);
+                color: var(--app-text);
             }
 
             .plan-summary {
@@ -246,7 +251,7 @@
 
             .plan-fit {
                 padding: 12px 14px;
-                border-radius: 16px;
+                border-radius: var(--app-radius-sm);
                 background: var(--panel-soft);
                 color: var(--card-muted);
                 line-height: 1.5;

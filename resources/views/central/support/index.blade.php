@@ -84,8 +84,41 @@
                                         <h3>Ticket Action</h3>
                                         <p>Update status and response for #{{ $ticket->id }} {{ $ticket->subject }}.</p>
                                     </div>
+                                    <button type="button" class="modal-close-button support-ticket-close" data-details-close aria-label="Close ticket action">&times;</button>
                                 </div>
                                 <div class="support-ticket-form-body">
+                                    <div class="support-ticket-detail-grid">
+                                        <div class="support-ticket-detail-item">
+                                            <span>Subject</span>
+                                            <strong>{{ $ticket->subject }}</strong>
+                                        </div>
+                                        <div class="support-ticket-detail-item">
+                                            <span>Category</span>
+                                            <strong>{{ ucfirst($ticket->category) }}</strong>
+                                        </div>
+                                        <div class="support-ticket-detail-item">
+                                            <span>Priority</span>
+                                            <strong>{{ ucfirst($ticket->priority) }}</strong>
+                                        </div>
+                                        <div class="support-ticket-detail-item">
+                                            <span>Submitted By</span>
+                                            <strong>{{ $ticket->requester_name }}</strong>
+                                            <small>{{ $ticket->requester_email }}</small>
+                                        </div>
+                                        <div class="support-ticket-detail-item">
+                                            <span>Tenant</span>
+                                            <strong>{{ $ticket->tenant_name }}</strong>
+                                        </div>
+                                        <div class="support-ticket-detail-item">
+                                            <span>Date Submitted</span>
+                                            <strong>{{ $ticket->created_at?->format('M d, Y h:i A') }}</strong>
+                                        </div>
+                                        <div class="support-ticket-detail-item support-ticket-detail-message">
+                                            <span>Message</span>
+                                            <p>{{ $ticket->message }}</p>
+                                        </div>
+                                    </div>
+
                                     <div class="support-status-field">
                                         <span>Set Status</span>
                                         <div class="support-status-options">

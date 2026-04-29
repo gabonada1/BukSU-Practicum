@@ -82,7 +82,7 @@
         'users' => 'Manage coordinator, supervisor, and student accounts inside this tenant workspace.',
         'requirements' => 'Review requirement submissions, monitor approval flow, and keep document compliance moving.',
         'hours' => 'Watch validated duty hours, keep logs accurate, and surface records that still need review.',
-        'audit' => 'Review activity recorded only for '.$tenant->name.'. Other tenant activity is excluded from this workspace.',
+        'audit' => 'Review activity recorded inside '.$tenant->name.' tenant portal. Central admin actions stay in the central audit log.',
     ][$currentSection];
 @endphp
 
@@ -118,6 +118,12 @@
                     <a class="panel-link" href="{{ $rbacIndexUrl }}">RBAC</a>
                 @elseif ($currentSection === 'audit')
                 @else
+                    @if ($currentSection === 'hours')
+                        <a class="panel-link" href="{{ $hourLogExportUrl }}">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            Download PDF
+                        </a>
+                    @endif
                     <a class="panel-link" href="{{ $dashboardBaseUrl.'?section='.$currentSection.'&create='.$currentSection }}">Add Record</a>
                 @endif
             </div>
@@ -158,7 +164,7 @@
                         <div>
                             <span class="mini-kicker">Tenant Scoped</span>
                             <h2>{{ $tenant->name }} Activity</h2>
-                            <p>{{ $auditLogs->count() }} audit entries belong to this tenant.</p>
+                            <p>{{ $auditLogs->count() }} tenant portal audit entries belong to this tenant.</p>
                         </div>
                     </div>
 

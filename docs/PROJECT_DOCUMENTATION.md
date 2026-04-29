@@ -107,12 +107,13 @@ When Bukidnon State University Administration registers a new university portal 
 | Bukidnon State University | BSU | PREMIUM | univ, bsu.localhost, bsu.lvh.me, ustp.lvh.me | buksu_bukidnon_state_university | Active |
 | College of Arts & Sciences | CAS | PREMIUM | arts-sciences.localhost | buksu_college_of_arts_and_sciences | Active |
 | College of Business | COLLEG | PRO | cob.lvh.me, cob, colleg.lvh.me | buksu_college_of_business | Active |
-| College of Business | COB | PREMIUM | business.localhost | buksu_college_of_business | Active |
+| College of Business | COB | BASIC | business.localhost | buksu_college_of_business | Active |
 | College of Education | COED | PREMIUM | education.localhost | buksu_college_of_education | Active |
 | College of Nursing | CON | PREMIUM | nursing, nursing.localhost, con.lvh.me, nursing.lvh.me | buksu_college_of_nursing | Active |
 | College of Public Administration | CPA | PREMIUM | public-admin.localhost | buksu_college_of_public_administration | Active |
 | College of Technologies | COT | PREMIUM | cot, technology.localhost, cot.lvh.me | buksu_college_of_technologies | Active |
 | NEMSU | N | PREMIUM | nemsu, nemsu.localhost | 18a0211aa63774306acaf2ae | Active |
+| NEMSU | N | BASIC | ustp, ustp.localhost | 9b73a7218dacaafeef6e916e | Active |
 
 ## 8. Seeded Local Credentials
 

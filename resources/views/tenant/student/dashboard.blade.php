@@ -5,9 +5,12 @@
     $approvedRequirements = $student->requirements->where('status', 'approved')->count();
     $approvedLogs = $student->hourLogs->where('status', 'approved')->count();
     $remainingHours = max(0, (float) $student->required_hours - (float) $student->completed_hours);
-    $activeApplication = $student->applications->first(fn ($application) => in_array($application->status, ['pending', 'accepted', 'deployed'], true));
+    $activeApplication = $student->applications
+        ->whereIn('status', ['pending', 'accepted', 'deployed'])
+        ->sortByDesc(fn ($application) => $application->applied_at?->timestamp ?? 0)
+        ->first();
     $latestApplicationForDocuments = $activeApplication ?: $student->applications->sortByDesc(fn ($application) => $application->applied_at?->timestamp ?? 0)->first();
-    $assignedSupervisors = $student->partnerCompany?->supervisors ?? collect();
+    $assignedSupervisors = $assignedSupervisors ?? collect();
     $sectionMeta = [
         'applications' => [
             'title' => 'Internship Applications',
@@ -323,6 +326,9 @@
                                             <option value="{{ $assignedSupervisor->name }}" @selected(old('supervisor_name') === $assignedSupervisor->name)>{{ $assignedSupervisor->name }}</option>
                                         @endforeach
                                     </select>
+                                    @if ($assignedSupervisors->isEmpty())
+                                        <small>No supervisor is linked to your active partner company yet.</small>
+                                    @endif
                                 </label>
                                 <label class="field-span-2">Activity <textarea name="activity" placeholder="Describe what you completed during this shift" required>{{ old('activity') }}</textarea></label>
                             </div>

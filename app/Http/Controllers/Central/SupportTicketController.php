@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Central;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CentralSupportTicketRequest;
 use App\Models\SupportTicket;
 use App\Support\Security\AuditLogger;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
-use Illuminate\Validation\Rule;
 
 class SupportTicketController extends Controller
 {
@@ -34,12 +33,9 @@ class SupportTicketController extends Controller
         ]);
     }
 
-    public function update(Request $request, SupportTicket $ticket): RedirectResponse
+    public function update(CentralSupportTicketRequest $request, SupportTicket $ticket): RedirectResponse
     {
-        $validated = $request->validate([
-            'status' => ['required', Rule::in(array_keys($this->statuses()))],
-            'superadmin_response' => ['nullable', 'string', 'max:4000'],
-        ]);
+        $validated = $request->validated();
 
         $oldValues = $ticket->only(['status', 'superadmin_response', 'resolved_by', 'resolved_at']);
         $actor = Auth::guard('central_superadmin')->user();
