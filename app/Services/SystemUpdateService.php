@@ -41,20 +41,6 @@ class SystemUpdateService
         'vendor',
     ];
 
-    protected const REPLACED_RELEASE_PATHS = [
-        'app',
-        'bootstrap/app.php',
-        'config',
-        'database',
-        'resources',
-        'routes',
-        'composer.json',
-        'composer.lock',
-        'package.json',
-        'package-lock.json',
-        'vite.config.js',
-    ];
-
     public function run(SystemUpdate $update): void
     {
         $this->prepareLongRunningExecution($update);
@@ -99,11 +85,12 @@ class SystemUpdateService
                 $this->callArtisan($update, 'tenants:seed', [], 'Tenant database seeders completed.');
             }
 
-            if ($options['run_npm_build'] && ! $this->hasPrebuiltFrontendAssets($sourcePath)) {
-                $this->runProcess($update, [$this->binary('npm'), 'install', '--production=false'], 'Frontend dependencies installed.');
-                $this->runProcess($update, [$this->binary('npm'), 'run', 'build'], 'Frontend assets built.');
+            if ($options['run_npm_build'] && ! $this->hasPrebuiltFrontendAssets()) {
+                if ($this->runOptionalProcess($update, [$this->binary('npm'), 'install', '--production=false'], 'Frontend dependencies installed.')) {
+                    $this->runOptionalProcess($update, [$this->binary('npm'), 'run', 'build'], 'Frontend assets built.');
+                }
             } elseif ($options['run_npm_build']) {
-                $this->log($update, 'Frontend build skipped because the release includes prebuilt assets.');
+                $this->log($update, 'Frontend build skipped because prebuilt assets are already present.');
             }
 
             $this->cleanup($workingRoot);
@@ -292,11 +279,11 @@ class SystemUpdateService
                 continue;
             }
 
-            $sourcePath = $sourceRoot.DIRECTORY_SEPARATOR.$entry;
-            $targetPath = $targetRoot.DIRECTORY_SEPARATOR.$entry;
-
-            $this->replaceTargetPathBeforeCopy($targetPath, $entry);
-            $this->copyReleasePath($sourcePath, $targetPath, $entry);
+            $this->copyReleasePath(
+                $sourceRoot.DIRECTORY_SEPARATOR.$entry,
+                $targetRoot.DIRECTORY_SEPARATOR.$entry,
+                $entry
+            );
         }
 
         $this->log($update, 'Release files copied into the application.');
@@ -343,23 +330,6 @@ class SystemUpdateService
         return false;
     }
 
-    protected function replaceTargetPathBeforeCopy(string $targetPath, string $relativePath): void
-    {
-        $normalized = str_replace('\\', '/', ltrim($relativePath, '/\\'));
-
-        if (! in_array($normalized, self::REPLACED_RELEASE_PATHS, true) || ! File::exists($targetPath)) {
-            return;
-        }
-
-        if (File::isDirectory($targetPath)) {
-            File::deleteDirectory($targetPath);
-
-            return;
-        }
-
-        File::delete($targetPath);
-    }
-
     protected function runProcess(SystemUpdate $update, array $command, string $successMessage, array $environment = []): void
     {
         $this->log($update, 'Running command: '.implode(' ', $command));
@@ -382,6 +352,19 @@ class SystemUpdateService
         $this->log($update, $successMessage);
     }
 
+    protected function runOptionalProcess(SystemUpdate $update, array $command, string $successMessage, array $environment = []): bool
+    {
+        try {
+            $this->runProcess($update, $command, $successMessage, $environment);
+
+            return true;
+        } catch (Throwable $exception) {
+            $this->log($update, 'Optional command skipped: '.$this->friendlyProcessFailureMessage($exception->getMessage()));
+
+            return false;
+        }
+    }
+
     protected function callArtisan(SystemUpdate $update, string $command, array $parameters, string $successMessage): void
     {
         $this->log($update, 'Running artisan command: '.$command);
@@ -400,6 +383,19 @@ class SystemUpdateService
         $this->log($update, $successMessage);
     }
 
+    protected function friendlyProcessFailureMessage(string $message): string
+    {
+        if (Str::contains($message, 'ncrypto::CSPRNG')) {
+            return 'Node.js failed to start on this Windows machine, so npm/build steps were skipped.';
+        }
+
+        if (Str::contains($message, ['UNLOADABLE_DEPENDENCY', '@tailwindcss/oxide', 'spawn EPERM'])) {
+            return 'Frontend build could not start on this Windows machine, so npm/build steps were skipped.';
+        }
+
+        return $message !== '' ? Str::limit($message, 500) : 'The optional frontend build command failed.';
+    }
+
     protected function binary(string $tool): string
     {
         if (PHP_OS_FAMILY !== 'Windows') {
@@ -412,29 +408,9 @@ class SystemUpdateService
         };
     }
 
-    protected function hasPrebuiltFrontendAssets(string $sourceRoot): bool
+    protected function hasPrebuiltFrontendAssets(): bool
     {
-        $manifestPath = $sourceRoot.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'build'.DIRECTORY_SEPARATOR.'manifest.json';
-
-        if (! File::exists($manifestPath)) {
-            return false;
-        }
-
-        $manifest = json_decode((string) File::get($manifestPath), true);
-
-        if (! is_array($manifest)) {
-            return false;
-        }
-
-        foreach ($manifest as $entry) {
-            $asset = $entry['file'] ?? null;
-
-            if (! is_string($asset) || ! File::exists($sourceRoot.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.'build'.DIRECTORY_SEPARATOR.$asset)) {
-                return false;
-            }
-        }
-
-        return true;
+        return File::exists(public_path('build/manifest.json'));
     }
 
     protected function cleanup(string $path): void
