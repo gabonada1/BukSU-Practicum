@@ -5,7 +5,7 @@
 >
     <p>Hello {{ $recipientName }},</p>
 
-    <p>Bukidnon State University Administration has reactivated your university portal.</p>
+    <p>University Practicum Administration has reactivated your university portal.</p>
 
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" class="email-data-table">
         <tr>
@@ -28,4 +28,3 @@
 
     <p>You may sign in again and continue managing your practicum portal.</p>
 </x-email-shell>
-

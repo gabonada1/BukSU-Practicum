@@ -7,7 +7,16 @@
 <article>
 @endunless
     @if ($showHeading)
-        <h2>Recent Progress & Hour Logs</h2>
+        <div class="section-header">
+            <div>
+                <h2>Recent Progress & Hour Logs</h2>
+                <p>Review student OJT submissions and export the complete log history.</p>
+            </div>
+            <a class="button secondary" href="{{ route('tenant.admin.hours.export') }}">
+                <i class="fa-solid fa-file-pdf"></i>
+                Download PDF
+            </a>
+        </div>
     @endif
     @if ($hourLogs->isEmpty())
         <p>No OJT hour logs yet.</p>

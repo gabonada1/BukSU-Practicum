@@ -1,4 +1,6 @@
 ﻿@php
+    /** @var \Illuminate\Support\ViewErrorBag $errors */
+    $validationErrors = $errors;
     $layoutMode = 'dashboard';
     $courseFormContext = old('form_context');
     $editingCourseId = old('editing_course_id');
@@ -7,25 +9,25 @@
         'supervisor' => ['name', 'email', 'position'],
         default => ['name', 'email'],
     };
-    $profileInfoHasErrors = collect($profileInfoFields)->contains(fn ($field) => $errors->has($field));
-    $passwordHasErrors = $errors->has('current_password')
-        || $errors->has('password')
-        || $errors->has('password_confirmation');
-    $brandingHasErrors = $errors->has('portal_title')
-        || $errors->has('accent_color')
-        || $errors->has('secondary_color')
-        || $errors->has('page_color')
-        || $errors->has('page_alt_color')
-        || $errors->has('surface_color')
-        || $errors->has('surface_soft_color')
-        || $errors->has('surface_alt_color')
-        || $errors->has('text_color')
-        || $errors->has('text_muted_color')
-        || $errors->has('border_color')
-        || $errors->has('portal_logo');
-    $ojtSettingsHasErrors = $errors->has('default_ojt_hours')
-        || $errors->has('allow_student_hour_override')
-        || $errors->has('ojt_hours_note');
+    $profileInfoHasErrors = collect($profileInfoFields)->contains(fn ($field) => $validationErrors->has($field));
+    $passwordHasErrors = $validationErrors->has('current_password')
+        || $validationErrors->has('password')
+        || $validationErrors->has('password_confirmation');
+    $brandingHasErrors = $validationErrors->has('portal_title')
+        || $validationErrors->has('accent_color')
+        || $validationErrors->has('secondary_color')
+        || $validationErrors->has('page_color')
+        || $validationErrors->has('page_alt_color')
+        || $validationErrors->has('surface_color')
+        || $validationErrors->has('surface_soft_color')
+        || $validationErrors->has('surface_alt_color')
+        || $validationErrors->has('text_color')
+        || $validationErrors->has('text_muted_color')
+        || $validationErrors->has('border_color')
+        || $validationErrors->has('portal_logo');
+    $ojtSettingsHasErrors = $validationErrors->has('default_ojt_hours')
+        || $validationErrors->has('allow_student_hour_override')
+        || $validationErrors->has('ojt_hours_note');
     $courseCreateHasErrors = $courseFormContext === 'course-create';
     $courseEditHasErrors = $courseFormContext === 'course-edit' && filled($editingCourseId);
     $brandingPortalTitle = old('portal_title', $brandingSettings['portal_title']);
@@ -57,6 +59,9 @@
     $profileSubtitle = $profileRole === 'admin'
         ? 'Internship Coordinator account for '.$tenant->name
         : ($profileRole === 'supervisor' ? 'Company Supervisor account for '.$tenant->name : 'Student account for '.$tenant->name);
+    $currentPlan = \App\Support\Billing\PlanCatalog::find(strtolower((string) $tenant->plan));
+    $currentPlanLabel = $currentPlan['label'] ?? str($tenant->plan ?: 'basic')->title();
+    $currentPlanSummary = $currentPlan['summary'] ?? 'Active tenant subscription plan.';
 @endphp
 
 @extends('layouts.tenant')
@@ -151,6 +156,10 @@
                         <strong>{{ $tenant->name }}</strong>
                     </div>
                     <div class="profile-detail-card">
+                        <span>Current Plan</span>
+                        <strong>{{ $currentPlanLabel }}</strong>
+                    </div>
+                    <div class="profile-detail-card">
                         <span>Portal Title</span>
                         <strong>{{ $brandingSettings['portal_title'] }}</strong>
                     </div>
@@ -185,6 +194,10 @@
             @if ($profileRole === 'admin')
                 <div class="profile-mini-grid">
                     <div class="profile-detail-card">
+                        <span>Plan Access</span>
+                        <strong>{{ $currentPlanLabel }}</strong>
+                    </div>
+                    <div class="profile-detail-card">
                         <span>Accent</span>
                         <strong>{{ strtoupper($brandingSettings['accent']) }}</strong>
                     </div>
@@ -201,6 +214,7 @@
                         <strong>{{ $courses->count() }}</strong>
                     </div>
                 </div>
+                <p class="profile-plan-summary">{{ $currentPlanSummary }}</p>
             @endif
         </article>
     </section>

@@ -1,7 +1,7 @@
 @php
     $layoutMode = 'dashboard';
     $hideCentralHeader = true;
-    $systemLogo = asset('images/logos/logo.jpg');
+    $systemLogo = asset('images/logos/logo.jpeg');
     $showApplicationModal = $errors->any() || old('college_name') || old('contact_name') || old('admin_email');
     $rolloutSteps = [
         [
@@ -31,6 +31,16 @@
             'copy' => 'Handle forms, logs, evaluations, and completion tracking with role-based access.',
         ],
     ];
+    $planCtas = [
+        'basic' => 'Start with Basic',
+        'pro' => 'Choose Pro',
+        'premium' => 'Go Premium',
+    ];
+    $planBadges = [
+        'basic' => 'Starter',
+        'pro' => 'Most practical',
+        'premium' => 'Full access',
+    ];
 @endphp
 
 @extends('layouts.central')
@@ -40,10 +50,10 @@
         <section class="landing-hero landing-hero-enhanced">
             <div class="landing-stack landing-hero-copy">
                 <span class="app-section-kicker">University Practicum Platform</span>
-                <h1>Launch a practicum portal your coordinators, students, and supervisors can actually enjoy using.</h1>
+                <h1>One OJT workspace for applications, documents, hours, and evaluations.</h1>
                 <p>
-                    Replace scattered approvals, manual tracking, and fragmented submissions with one polished college workspace
-                    for applications, requirements, deployment, and OJT monitoring.
+                    Give every college its own secure portal where coordinators can approve placements, students can submit
+                    requirements, and supervisors can keep progress visible from deployment to completion.
                 </p>
 
                 <div class="hero-actions">
@@ -59,6 +69,39 @@
             </div>
 
             <div class="landing-hero-visual landing-hero-panel">
+                <div class="landing-portal-preview">
+                    <div class="landing-preview-header">
+                        <div class="landing-preview-logo">
+                            <img src="{{ $systemLogo }}" alt="University Practicum Logo">
+                        </div>
+                        <div>
+                            <span>Tenant Portal</span>
+                            <strong>OJT Operations</strong>
+                        </div>
+                    </div>
+
+                    <div class="landing-preview-flow">
+                        <span>Applications</span>
+                        <span>Requirements</span>
+                        <span>Hour Logs</span>
+                        <span>Supervisor Review</span>
+                    </div>
+
+                    <div class="landing-preview-list">
+                        <div>
+                            <strong>Students</strong>
+                            <span>Submit applications and upload requirements</span>
+                        </div>
+                        <div>
+                            <strong>Coordinators</strong>
+                            <span>Review records, courses, hours, and approvals</span>
+                        </div>
+                        <div>
+                            <strong>Supervisors</strong>
+                            <span>Monitor assigned interns and validate logs</span>
+                        </div>
+                    </div>
+                </div>
                 <article class="hero-stat hero-stat-primary">
                     <span>Active Tenants</span>
                     <strong>{{ $stats['active_tenants'] }}</strong>
@@ -134,24 +177,39 @@
             </article>
         </section>
 
-        <section class="plan-grid landing-plan-grid">
-            @foreach ($plans as $plan)
-                <article class="plan-card landing-plan-card">
-                    <div class="section-header">
+        <section class="section-card landing-pricing-card" id="plans">
+            <div class="section-header landing-pricing-header">
+                <div>
+                    <span class="mini-kicker">Plans</span>
+                    <h2>Pick the access level that matches your practicum operation</h2>
+                    <p>Each plan includes a tenant workspace, guided onboarding, and the workflows needed to run university OJT from one place.</p>
+                </div>
+            </div>
+
+            <div class="plan-grid landing-plan-grid">
+                @foreach ($plans as $planKey => $plan)
+                    <article class="plan-card landing-plan-card landing-plan-card-{{ $planKey }}">
+                        <div class="landing-plan-top">
+                            <span class="plan-badge">{{ $planBadges[$planKey] ?? 'Plan' }}</span>
+                            <span class="plan-price">PHP {{ number_format($plan['amount'] / 100, 2) }}</span>
+                        </div>
                         <div>
                             <h2>{{ $plan['label'] }}</h2>
                             <p>{{ $plan['summary'] }}</p>
                         </div>
-                        <span class="plan-price">PHP {{ number_format($plan['amount'] / 100, 2) }}</span>
-                    </div>
 
-                    <ul class="clean-list">
-                        @foreach ($plan['features'] as $feature)
-                            <li>{{ $feature }}</li>
-                        @endforeach
-                    </ul>
-                </article>
-            @endforeach
+                        <ul class="clean-list landing-plan-feature-list">
+                            @foreach ($plan['features'] as $feature)
+                                <li>{{ $feature }}</li>
+                            @endforeach
+                        </ul>
+
+                        <button type="button" class="button landing-plan-select-button" data-landing-modal-open data-plan-choice="{{ $planKey }}">
+                            {{ $planCtas[$planKey] ?? 'Apply for this plan' }}
+                        </button>
+                    </article>
+                @endforeach
+            </div>
         </section>
 
         <article class="section-card landing-benefits-card">
@@ -163,9 +221,9 @@
             </div>
 
             <div class="benefit-grid">
-                @foreach ($benefits as $benefit)
+                @foreach ($benefits as $index => $benefit)
                     <article class="benefit-card">
-                        <h3>Built for real practicum operations</h3>
+                        <h3>{{ ['Clean tenant records', 'Role-based portals', 'Complete OJT workflow', 'Controlled rollout'][$index] ?? 'Practicum operations' }}</h3>
                         <p>{{ $benefit }}</p>
                     </article>
                 @endforeach
@@ -212,7 +270,7 @@
                     <div class="form-grid">
                         <label>
                             University Name
-                            <input type="text" name="college_name" value="{{ old('college_name') }}" placeholder="Bukidnon State University - College of Technologies" required>
+                            <input type="text" name="college_name" value="{{ old('college_name') }}" placeholder="University Practicum - College of Technologies" required>
                         </label>
                         <label>
                             Contact Person
@@ -284,7 +342,16 @@
             };
 
             document.querySelectorAll('[data-landing-modal-open]').forEach(function (trigger) {
-                trigger.addEventListener('click', openModal);
+                trigger.addEventListener('click', function () {
+                    const planChoice = trigger.getAttribute('data-plan-choice');
+                    const planSelect = modal.querySelector('select[name="selected_plan"]');
+
+                    if (planChoice && planSelect) {
+                        planSelect.value = planChoice;
+                    }
+
+                    openModal();
+                });
             });
 
             document.querySelectorAll('[data-landing-modal-close]').forEach(function (trigger) {

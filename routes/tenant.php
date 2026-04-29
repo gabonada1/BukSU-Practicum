@@ -1,24 +1,24 @@
 <?php
 
-use App\Http\Controllers\CourseController;
-use App\Http\Controllers\InternshipApplicationController;
-use App\Http\Controllers\OjtHourLogController;
-use App\Http\Controllers\PartnerCompanyController;
-use App\Http\Controllers\StudentController;
-use App\Http\Controllers\StudentDashboardController;
-use App\Http\Controllers\StudentRequirementController;
-use App\Http\Controllers\SupervisorController;
-use App\Http\Controllers\SupervisorDashboardController;
-use App\Http\Controllers\TenantAdminPasswordSetupController;
-use App\Http\Controllers\TenantAuthController;
-use App\Http\Controllers\TenantDashboardController;
-use App\Http\Controllers\TenantForgotPasswordController;
-use App\Http\Controllers\TenantProfileController;
-use App\Http\Controllers\TenantRbacController;
-use App\Http\Controllers\TenantRegistrationController;
-use App\Http\Controllers\TenantReleaseController;
-use App\Http\Controllers\TenantSupportController;
-use App\Http\Controllers\TenantUserManagementController;
+use App\Http\Controllers\Tenant\CourseController;
+use App\Http\Controllers\Tenant\InternshipApplicationController;
+use App\Http\Controllers\Tenant\OjtHourLogController;
+use App\Http\Controllers\Tenant\PartnerCompanyController;
+use App\Http\Controllers\Tenant\StudentController;
+use App\Http\Controllers\Tenant\StudentDashboardController;
+use App\Http\Controllers\Tenant\StudentRequirementController;
+use App\Http\Controllers\Tenant\SupervisorController;
+use App\Http\Controllers\Tenant\SupervisorDashboardController;
+use App\Http\Controllers\Tenant\TenantAdminPasswordSetupController;
+use App\Http\Controllers\Tenant\TenantAuthController;
+use App\Http\Controllers\Tenant\TenantDashboardController;
+use App\Http\Controllers\Tenant\TenantForgotPasswordController;
+use App\Http\Controllers\Tenant\TenantProfileController;
+use App\Http\Controllers\Tenant\TenantRbacController;
+use App\Http\Controllers\Tenant\TenantRegistrationController;
+use App\Http\Controllers\Tenant\TenantReleaseController;
+use App\Http\Controllers\Tenant\TenantSupportController;
+use App\Http\Controllers\Tenant\TenantUserManagementController;
 use Illuminate\Support\Facades\Route;
 
 $loginRoles = ['admin', 'student', 'supervisor'];
@@ -89,6 +89,7 @@ $registerTenantRoutes = function (string $namePrefix) use ($loginRoles): void {
         Route::patch('/admin/supervisors/{supervisor}', [SupervisorController::class, 'update'])->name("{$namePrefix}admin.supervisors.update");
         Route::post('/admin/requirements', [StudentRequirementController::class, 'store'])->name("{$namePrefix}admin.requirements.store");
         Route::patch('/admin/requirements/{requirement}', [StudentRequirementController::class, 'update'])->name("{$namePrefix}admin.requirements.update");
+        Route::get('/admin/hours/export', [OjtHourLogController::class, 'export'])->name("{$namePrefix}admin.hours.export");
         Route::post('/admin/hours', [OjtHourLogController::class, 'store'])->name("{$namePrefix}admin.hours.store");
         Route::patch('/admin/hours/{hour}', [OjtHourLogController::class, 'update'])->name("{$namePrefix}admin.hours.update");
         Route::patch('/admin/users/{type}/{id}', [TenantUserManagementController::class, 'update'])

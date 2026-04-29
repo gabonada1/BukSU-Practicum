@@ -9,47 +9,7 @@
     $centralPath = rtrim($appParts['path'] ?? '', '/');
     $renewUrl = $centralScheme.'://'.$centralHost.$centralPort.$centralPath.'/central/login';
 
-    $plans = [
-        'basic' => [
-            'label' => 'Basic',
-            'summary' => 'Designed for smaller colleges or focused practicum programs.',
-            'features' => [
-                'Up to 200 students per university portal',
-                'Partner organization management',
-                'Student OJT application submission',
-                'Document uploads (MOA, resume, clearance, etc.)',
-                'Basic OJT hour tracking',
-                'Company supervisor evaluation forms',
-                'Limited support and reports',
-                'No advanced dashboards or analytics',
-            ],
-        ],
-        'pro' => [
-            'label' => 'Pro',
-            'summary' => 'For medium-sized colleges with more active practicum operations.',
-            'features' => [
-                'Up to 500 students per university portal',
-                'All Basic college license features',
-                'Progress tracking dashboards for students and coordinators',
-                'Commenting and revision requests on documents and reports',
-                'Monthly summary reports for placements and evaluations',
-                'Notifications for pending tasks and approvals',
-            ],
-        ],
-        'premium' => [
-            'label' => 'Premium',
-            'summary' => 'For large colleges with full practicum oversight and reporting needs.',
-            'features' => [
-                'Unlimited students',
-                'All Pro college license features',
-                'Advanced analytics and reports (placement stats, OJT hour completion, evaluation summaries)',
-                'Certificate generation for completed OJT deployments',
-                'Custom branding per college (logo, theme)',
-                'Priority support',
-                'API access for integration with other college systems',
-            ],
-        ],
-    ];
+    $plans = \App\Support\Billing\PlanCatalog::all();
 
     $currentPlan = strtolower($tenant->plan ?? 'basic');
 @endphp
@@ -59,21 +19,22 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>University Portal Unavailable</title>
+        @include('layouts.partials.app-theme')
         <style>
             :root {
-                --page: #13131f;
-                --page-alt: #1a1a2e;
-                --shell: #1f1f38;
-                --panel: #272745;
-                --panel-soft: #31315a;
-                --card-ink: #f0ecf8;
-                --card-muted: #a89ec0;
-                --accent: #7B1C2E;
-                --accent-strong: #5E1423;
-                --warm: #F5A623;
-                --danger: #d07070;
-                --success: #6db88a;
-                --shadow: 0 26px 56px rgba(0, 0, 0, 0.32);
+                --page: var(--app-page);
+                --page-alt: var(--app-page-alt);
+                --shell: var(--app-panel);
+                --panel: var(--app-surface);
+                --panel-soft: var(--app-panel-soft);
+                --card-ink: var(--app-text);
+                --card-muted: var(--app-text-muted);
+                --accent: var(--app-primary);
+                --accent-strong: var(--app-primary-strong);
+                --warm: var(--app-warning);
+                --danger: var(--app-danger);
+                --success: var(--app-success);
+                --shadow: var(--app-shadow);
             }
 
             * {
@@ -84,9 +45,12 @@
                 margin: 0;
                 min-height: 100vh;
                 padding: 32px 24px;
-                font-family: "Bahnschrift", "Segoe UI", "Trebuchet MS", sans-serif;
-                background: radial-gradient(circle at top center, rgba(123, 28, 46, 0.12), transparent 28%), linear-gradient(180deg, var(--page), var(--page-alt));
-                color: #f0edf5;
+                font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+                background:
+                    radial-gradient(circle at top left, var(--app-primary-glow), transparent 30%),
+                    radial-gradient(circle at bottom right, rgba(115, 199, 182, 0.12), transparent 28%),
+                    linear-gradient(180deg, var(--page), var(--page-alt));
+                color: var(--card-ink);
             }
 
             .wrap {
@@ -98,9 +62,11 @@
 
             .panel {
                 padding: 34px;
-                border-radius: 30px;
-                background: linear-gradient(180deg, var(--shell), var(--panel));
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: var(--app-radius-xl);
+                background:
+                    radial-gradient(circle at top right, var(--app-primary-glow), transparent 36%),
+                    linear-gradient(180deg, var(--app-surface), var(--app-page-alt));
+                border: 1px solid var(--app-border);
                 box-shadow: var(--shadow);
             }
 
@@ -113,9 +79,9 @@
                 font-weight: 700;
                 letter-spacing: 0.14em;
                 text-transform: uppercase;
-                color: #ece5f4;
-                background: rgba(255, 255, 255, 0.06);
-                border: 1px solid rgba(255, 255, 255, 0.08);
+                color: var(--app-text);
+                background: var(--app-primary-soft);
+                border: 1px solid var(--app-border-strong);
             }
 
             h1,
@@ -142,6 +108,7 @@
                 display: grid;
                 grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
                 gap: 18px;
+                align-items: stretch;
             }
 
             .meta {
@@ -151,9 +118,9 @@
 
             .meta div {
                 padding: 14px 16px;
-                border-radius: 18px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: var(--app-radius-md);
+                background: var(--panel-soft);
+                border: 1px solid var(--app-border);
                 color: var(--card-muted);
             }
 
@@ -164,9 +131,9 @@
             }
 
             .status {
-                color: #f3dde3;
-                background: rgba(123, 28, 46, 0.16);
-                border: 1px solid rgba(123, 28, 46, 0.24);
+                color: var(--app-text);
+                background: rgba(217, 107, 122, 0.12);
+                border: 1px solid rgba(217, 107, 122, 0.28);
             }
 
             .cta-card {
@@ -182,7 +149,7 @@
                 gap: 10px;
                 min-height: 48px;
                 padding: 12px 18px;
-                border-radius: 16px;
+                border-radius: var(--app-radius-sm);
                 border: 1px solid transparent;
                 background: linear-gradient(135deg, var(--accent), var(--accent-strong));
                 color: #fff;
@@ -190,21 +157,33 @@
                 font-weight: 700;
                 letter-spacing: 0.02em;
                 text-decoration: none;
-                box-shadow: 0 12px 24px rgba(94, 20, 35, 0.24);
+                box-shadow: 0 12px 24px var(--app-primary-glow);
             }
 
             .button.secondary {
-                background: rgba(255, 255, 255, 0.04);
-                border-color: rgba(255, 255, 255, 0.08);
+                background: var(--app-panel-soft);
+                border-color: var(--app-border);
                 color: var(--card-ink);
                 box-shadow: none;
             }
 
             .helper {
                 padding: 16px 18px;
-                border-radius: 18px;
-                background: rgba(255, 255, 255, 0.04);
-                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: var(--app-radius-md);
+                background: var(--app-panel-soft);
+                border: 1px solid var(--app-border);
+            }
+
+            .license-wordmark {
+                width: 58px;
+                height: 58px;
+                border-radius: var(--app-radius-md);
+                display: grid;
+                place-items: center;
+                margin-bottom: 16px;
+                background: linear-gradient(145deg, rgba(217, 107, 122, 0.18), var(--app-primary-soft));
+                color: var(--app-danger);
+                font-size: 24px;
             }
 
             .plans-grid {
@@ -215,17 +194,19 @@
 
             .plan-card {
                 padding: 24px 22px;
-                border-radius: 26px;
-                background: linear-gradient(180deg, #252546, #1b1b31);
-                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: var(--app-radius-lg);
+                background:
+                    radial-gradient(circle at top right, var(--app-primary-glow), transparent 34%),
+                    linear-gradient(180deg, var(--app-surface), var(--app-page-alt));
+                border: 1px solid var(--app-border);
                 box-shadow: var(--shadow);
                 display: grid;
                 gap: 16px;
             }
 
             .plan-card.active {
-                border-color: rgba(123, 28, 46, 0.34);
-                box-shadow: 0 22px 40px rgba(94, 20, 35, 0.18);
+                border-color: var(--app-border-strong);
+                box-shadow: 0 22px 44px var(--app-primary-glow);
             }
 
             .plan-top {
@@ -252,20 +233,32 @@
                 font-weight: 700;
                 letter-spacing: 0.14em;
                 text-transform: uppercase;
-                background: rgba(255, 255, 255, 0.06);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                color: #ece5f4;
+                background: var(--app-primary-soft);
+                border: 1px solid var(--app-border-strong);
+                color: var(--app-text);
             }
 
             .plan-card.active .plan-badge {
-                background: rgba(123, 28, 46, 0.16);
-                border-color: rgba(123, 28, 46, 0.24);
-                color: #ffd9e2;
+                background: rgba(217, 107, 122, 0.14);
+                border-color: rgba(217, 107, 122, 0.28);
+                color: var(--app-text);
             }
 
             .plan-summary {
                 color: var(--card-muted);
                 min-height: 50px;
+            }
+
+            .plan-fit {
+                padding: 12px 14px;
+                border-radius: var(--app-radius-sm);
+                background: var(--panel-soft);
+                color: var(--card-muted);
+                line-height: 1.5;
+            }
+
+            .plan-fit strong {
+                margin-bottom: 2px;
             }
 
             .plan-card ul {
@@ -307,15 +300,16 @@
         </style>
     </head>
     <body>
-        <main >
-            <section >
-                <article >
-                    <span >University Portal Access Paused</span>
+        <main class="wrap">
+            <section class="top">
+                <article class="panel">
+                    <div class="license-wordmark" aria-hidden="true">!</div>
+                    <span class="eyebrow">University Portal Access Paused</span>
                     <h1>{{ $tenant->name }}</h1>
                     <p>{{ $message }}</p>
 
-                    <div  >
-                        <div >
+                    <div class="meta" >
+                        <div class="status">
                             <strong>Status</strong>
                             <span>{{ ucfirst($tenant->subscriptionStatus()) }}</span>
                         </div>
@@ -330,31 +324,36 @@
                     </div>
                 </article>
 
-                <aside >
+                <aside class="panel cta-card">
                     <div>
-                        <span >College License</span>
-                        <h2 >Restore Access</h2>
+                        <span class="eyebrow">College License</span>
+                        <h2>Restore Access</h2>
                         <p>Open University Administration to renew this college license tier and reactivate the portal.</p>
                     </div>
 
-                    <a  href="{{ $renewUrl }}">Open University Administration</a>
+                    <a class="button" href="{{ $renewUrl }}">Open University Administration</a>
 
-                    <div >
+                    <div class="helper">
                         <strong>Current License</strong>
-                        <span >{{ strtoupper($tenant->plan) }}</span>
+                        <span>{{ strtoupper($tenant->plan) }}</span>
                     </div>
                 </aside>
             </section>
 
-            <section >
+            <section class="plans-grid">
                 @foreach ($plans as $key => $plan)
-                    <article >
-                        <div >
+                    <article class="plan-card{{ $currentPlan === $key ? ' active' : '' }}">
+                        <div class="plan-top">
                             <div>
                                 <h2>{{ $plan['label'] }}</h2>
-                                <p >{{ $plan['summary'] }}</p>
+                                <p class="plan-summary">{{ $plan['summary'] }}</p>
                             </div>
-                            <span >{{ $currentPlan === $key ? 'Current' : 'Plan' }}</span>
+                            <span class="plan-badge">{{ $currentPlan === $key ? 'Current' : 'Plan' }}</span>
+                        </div>
+
+                        <div class="plan-fit">
+                            <strong>{{ $plan['student_limit'] ?? 'Flexible capacity' }}</strong>
+                            <span>{{ $plan['best_for'] ?? 'Designed for practicum teams.' }}</span>
                         </div>
 
                         <ul>
@@ -368,4 +367,3 @@
         </main>
     </body>
 </html>
-

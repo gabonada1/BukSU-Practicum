@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Central;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TenantNotificationRequest;
+use App\Http\Requests\TenantProvisionRequest;
+use App\Http\Requests\TenantStatusRequest;
+use App\Http\Requests\TenantUpdateRequest;
 use App\Mail\TenantActivatedMail;
 use App\Mail\TenantAdminCredentialsMail;
 use App\Mail\TenantSubscriptionUpdatedMail;
@@ -22,7 +26,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -37,24 +40,11 @@ class TenantProvisionController extends Controller
     ) {
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(TenantProvisionRequest $request): RedirectResponse
     {
         $this->authorizeTenantManagement();
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'plan' => ['required', Rule::in(['basic', 'pro', 'premium'])],
-            'subscription_starts_at' => ['required', 'date'],
-            'subscription_expires_at' => ['nullable', 'date', 'after_or_equal:subscription_starts_at'],
-            'bandwidth_limit_gb' => ['required', 'numeric', 'min:1', 'max:100000'],
-            'bandwidth_used_gb' => ['nullable', 'numeric', 'min:0', 'lte:bandwidth_limit_gb'],
-            'subdomain' => ['required', 'alpha_dash', 'max:63'],
-            'domain' => ['nullable', 'string', 'max:255'],
-            'database' => ['required', 'regex:/^[A-Za-z0-9_]+$/', Rule::unique('central.tenants', 'database')],
-            'admin_name' => ['nullable', 'string', 'max:255'],
-            'admin_email' => ['required', 'email', 'max:255'],
-            'admin_password' => ['nullable', 'string', 'min:8'],
-        ]);
+        $validated = $request->validated();
         $domainHosts = $this->resolvedDomainHosts($validated);
         $this->ensureDomainHostsAreAvailable($domainHosts);
 
@@ -93,7 +83,7 @@ class TenantProvisionController extends Controller
         return redirect()->route('central.dashboard')->with('status', "University portal {$tenant->name} registered successfully.");
     }
 
-    public function update(Request $request, Tenant $tenant): RedirectResponse
+    public function update(TenantUpdateRequest $request, Tenant $tenant): RedirectResponse
     {
         $this->authorizeTenantManagement();
 
@@ -103,24 +93,13 @@ class TenantProvisionController extends Controller
         $oldStartsAt = $tenant->subscription_starts_at?->toDateString();
         $oldExpiresAt = $tenant->subscription_expires_at?->toDateString();
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'plan' => ['required', Rule::in(['basic', 'pro', 'premium'])],
-            'subscription_starts_at' => ['required', 'date'],
-            'subscription_expires_at' => ['nullable', 'date', 'after_or_equal:subscription_starts_at'],
-            'is_active' => ['required', Rule::in(['0', '1'])],
-            'bandwidth_limit_gb' => ['required', 'numeric', 'min:1', 'max:100000'],
-            'bandwidth_used_gb' => ['nullable', 'numeric', 'min:0', 'lte:bandwidth_limit_gb'],
-            'domain_hosts' => ['nullable', 'string', 'max:2000'],
-            'admin_name' => ['nullable', 'string', 'max:255'],
-            'admin_email' => ['required', 'email', 'max:255'],
-        ]);
+        $validated = $request->validated();
 
         $domainHosts = $this->normalizedDomainHosts($validated['domain_hosts'] ?? '');
         $this->ensureDomainHostsAreAvailable($domainHosts, $tenant);
 
         $settings = is_array($tenant->settings) ? $tenant->settings : [];
-        $settings['bandwidth'] = $this->bandwidthSettings($validated);
+        $settings['bandwidth'] = $this->bandwidthSettings($validated, $oldPlan);
 
         $tenant->forceFill([
             'name' => $validated['name'],
@@ -175,13 +154,11 @@ class TenantProvisionController extends Controller
             ->with('status', "University portal {$tenant->name} updated successfully.");
     }
 
-    public function updateStatus(Request $request, Tenant $tenant): RedirectResponse
+    public function updateStatus(TenantStatusRequest $request, Tenant $tenant): RedirectResponse
     {
         $this->authorizeTenantManagement();
 
-        $validated = $request->validate([
-            'is_active' => ['required', Rule::in(['0', '1'])],
-        ]);
+        $validated = $request->validated();
 
         $tenant->forceFill([
             'is_active' => (bool) $validated['is_active'],
@@ -204,13 +181,11 @@ class TenantProvisionController extends Controller
             ->with('status', $tenant->name.' is now marked as '.($tenant->is_active ? 'active' : 'suspended').'.');
     }
 
-    public function notify(Request $request, Tenant $tenant): RedirectResponse
+    public function notify(TenantNotificationRequest $request, Tenant $tenant): RedirectResponse
     {
         $this->authorizeTenantManagement();
 
-        $validated = $request->validate([
-            'notification' => ['required', Rule::in(['activation', 'suspension', 'subscription', 'credentials'])],
-        ]);
+        $validated = $request->validated();
 
         $sent = match ($validated['notification']) {
             'activation' => $this->sendActivationNotice($tenant),
@@ -417,13 +392,28 @@ class TenantProvisionController extends Controller
         return true;
     }
 
-    protected function bandwidthSettings(array $validated): array
+    protected function bandwidthSettings(array $validated, ?string $currentPlan = null): array
     {
+        $planChanged = $currentPlan !== null && $currentPlan !== $validated['plan'];
+        $limit = $planChanged
+            ? $this->defaultBandwidthForPlan($validated['plan'])
+            : (float) $validated['bandwidth_limit_gb'];
+        $used = min((float) ($validated['bandwidth_used_gb'] ?? 0), $limit);
+
         return [
-            'limit_gb' => (float) $validated['bandwidth_limit_gb'],
-            'used_gb' => (float) ($validated['bandwidth_used_gb'] ?? 0),
+            'limit_gb' => $limit,
+            'used_gb' => max($used, 0),
             'updated_at' => now()->toDateTimeString(),
         ];
+    }
+
+    protected function defaultBandwidthForPlan(?string $plan): float
+    {
+        return match ($plan) {
+            'basic' => 150,
+            'pro' => 400,
+            default => 1000,
+        };
     }
 
     protected function authorizeTenantManagement(): void

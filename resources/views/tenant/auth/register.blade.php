@@ -7,7 +7,7 @@
         : config('app.name', 'University Practicum');
     $systemLogo = filled($tenantBranding['logo_path'] ?? null)
         ? asset($tenantBranding['logo_path'])
-        : asset('images/logos/logo.jpg');
+        : asset('images/logos/logo.jpeg');
     $selectedRole = in_array($selectedRole ?? null, ['student', 'teacher'], true) ? $selectedRole : null;
     $hasCourses = $courses->isNotEmpty();
     $departmentOptions = $courses->map(fn ($course) => trim($course->code.' - '.$course->name));

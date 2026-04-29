@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'BukSU Practicum Portal'),
+    'name' => env('APP_NAME', 'University Practicum'),
 
     /*
     |--------------------------------------------------------------------------

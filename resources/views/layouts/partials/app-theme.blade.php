@@ -141,6 +141,18 @@
                 return;
             }
 
+            const detailsClose = event.target.closest('[data-details-close]');
+
+            if (detailsClose) {
+                const details = detailsClose.closest('details');
+
+                if (details) {
+                    details.removeAttribute('open');
+                }
+
+                return;
+            }
+
             if (event.target === confirmShell) {
                 closeConfirm();
             }
@@ -150,11 +162,13 @@
             const form = event.target;
 
             if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-confirm')) {
+                applySubmittingState(form);
                 return;
             }
 
             if (form.dataset.confirmed === '1') {
                 form.dataset.confirmed = '0';
+                applySubmittingState(form);
                 return;
             }
 
@@ -198,11 +212,26 @@
             }
         });
 
-        window.setTimeout(function () {
+            window.setTimeout(function () {
             document.querySelectorAll('[data-toast]').forEach(function (toast) {
                 toast.remove();
             });
         }, 4200);
+
+        function applySubmittingState(form) {
+            if (!(form instanceof HTMLFormElement)) {
+                return;
+            }
+
+            const button = form.querySelector('[data-submit-button]');
+
+            if (!button) {
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = form.getAttribute('data-submitting-label') || 'Submitting...';
+        }
 
         function openConfirm() {
             if (!confirmShell) {

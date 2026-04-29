@@ -34,19 +34,26 @@
 
     <section class="updates-single-column">
         <article class="section-card">
-            <div class="section-header">
-                <div>
-                    <span class="mini-kicker">Published Versions</span>
-                    <h2>Choose an available update</h2>
-                    <p>Tenant admins see the same published release list as central admin. Select a version below, then apply it with the standard migration, seeding, and build commands.</p>
-                </div>
-            </div>
-
             @if ($releases->isEmpty())
-                <p>No published releases are available yet. Ask central administration to create the next update first.</p>
+                <div class="section-header">
+                    <div>
+                        <span class="mini-kicker">Published Versions</span>
+                        <h2>Choose an available update</h2>
+                        <p>No published releases are available yet. Ask central administration to create the next update first.</p>
+                    </div>
+                </div>
             @else
-                <form method="POST" action="{{ $applyUpdateAction }}">
+                <form method="POST" action="{{ $applyUpdateAction }}" class="tenant-update-form">
                     @csrf
+
+                    <div class="section-header tenant-update-form-header">
+                        <div>
+                            <span class="mini-kicker">Published Versions</span>
+                            <h2>Choose an available update</h2>
+                            <p>Tenant admins see the same published release list as central admin. Select a version below, then apply it with the standard migration, seeding, and build commands.</p>
+                        </div>
+                        <button type="submit" class="tenant-update-apply-button">Apply Update</button>
+                    </div>
 
                     <div class="updates-release-list">
                         @foreach ($releases as $release)
@@ -69,9 +76,7 @@
                         @endforeach
                     </div>
 
-                    <div class="actions">
-                        <button type="submit">Apply Update</button>
-                    </div>
+                    {{ $releases->links() }}
                 </form>
             @endif
         </article>

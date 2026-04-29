@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Central;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ApprovePlanApplicationRequest;
+use App\Http\Requests\PlanApplicationRequest;
+use App\Http\Requests\RejectPlanApplicationRequest;
 use App\Models\Tenant;
 use App\Mail\TenantPlanApplicationPendingApprovalMail;
 use App\Models\TenantDomain;
@@ -18,7 +21,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -31,19 +33,9 @@ class PlanApplicationController extends Controller
     ) {
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(PlanApplicationRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'college_name' => ['required', 'string', 'max:255'],
-            'contact_name' => ['required', 'string', 'max:255'],
-            'contact_email' => ['required', 'email', 'max:255'],
-            'contact_phone' => ['nullable', 'string', 'max:50'],
-            'admin_email' => ['required', 'email', 'max:255'],
-            'selected_plan' => ['required', Rule::in(array_keys(PlanCatalog::all()))],
-            'preferred_subdomain' => ['nullable', 'alpha_dash', 'max:100'],
-            'preferred_domain' => ['nullable', 'string', 'max:255'],
-            'notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
 
         $plan = PlanCatalog::find($validated['selected_plan']);
         abort_unless($plan, 404);
@@ -64,7 +56,7 @@ class PlanApplicationController extends Controller
             $mailFailures = $this->sendPendingApprovalNotifications($application);
 
             $response = redirect()->route('app.entry')
-                ->with('status', 'Local development checkout bypassed. The plan application is marked paid and is now waiting for Bukidnon State University approval.');
+                ->with('status', 'Local development checkout bypassed. The plan application is marked paid and is now waiting for University Practicum approval.');
 
             if ($mailFailures !== []) {
                 $response->withErrors([
@@ -165,7 +157,7 @@ class PlanApplicationController extends Controller
         $mailFailures = $this->sendPendingApprovalNotifications($application);
 
         $response = redirect()->route('app.entry')
-            ->with('status', 'Payment received. Your plan application is now waiting for Bukidnon State University approval. The tenant portal and coordinator credentials will only be created after approval.');
+            ->with('status', 'Payment received. Your plan application is now waiting for University Practicum approval. The tenant portal and coordinator credentials will only be created after approval.');
 
         if ($mailFailures !== []) {
             $response->withErrors([
@@ -186,23 +178,14 @@ class PlanApplicationController extends Controller
             ->withErrors(['payment' => 'Stripe checkout was cancelled. You can review the form and try again.']);
     }
 
-    public function approve(Request $request, TenantPlanApplication $application): RedirectResponse
+    public function approve(ApprovePlanApplicationRequest $request, TenantPlanApplication $application): RedirectResponse
     {
         if (! $application->canBeApproved()) {
             return redirect()->route('central.dashboard', ['section' => 'applications'])
                 ->withErrors(['approval' => 'Only paid applications that are still waiting for approval can be approved.']);
         }
 
-        $validated = $request->validate([
-            'subdomain' => ['nullable', 'alpha_dash', 'max:100'],
-            'domain' => ['nullable', 'string', 'max:255'],
-            'subscription_starts_at' => ['required', 'date'],
-            'subscription_expires_at' => ['nullable', 'date', 'after_or_equal:subscription_starts_at'],
-            'bandwidth_limit_gb' => ['required', 'numeric', 'min:1', 'max:100000'],
-            'bandwidth_used_gb' => ['nullable', 'numeric', 'min:0', 'lte:bandwidth_limit_gb'],
-            'admin_password' => ['required', 'string', 'min:8'],
-            'approval_notes' => ['nullable', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
         $domainHosts = $this->resolvedDomainHosts($validated, $application);
         $this->ensureDomainHostsAreAvailable($domainHosts);
         $databaseName = $this->approvedDatabaseName($application);
@@ -264,11 +247,9 @@ class PlanApplicationController extends Controller
             ->with('status', $application->college_name.' was approved and provisioned successfully.');
     }
 
-    public function reject(Request $request, TenantPlanApplication $application): RedirectResponse
+    public function reject(RejectPlanApplicationRequest $request, TenantPlanApplication $application): RedirectResponse
     {
-        $validated = $request->validate([
-            'rejection_reason' => ['required', 'string', 'max:1000'],
-        ]);
+        $validated = $request->validated();
         $oldValues = $application->only(['status', 'rejection_reason']);
 
         $application->update([
@@ -305,6 +286,23 @@ class PlanApplicationController extends Controller
             ->lower()
             ->replaceMatches('/^college of /', '')
             ->slug();
+    }
+
+    public static function suggestedAvailableSubdomain(string $collegeName): string
+    {
+        $base = self::suggestedSubdomain($collegeName);
+        $candidate = $base;
+        $suffix = strtolower((string) config('tenancy.local_domain_suffix', 'localhost'));
+        $counter = 2;
+
+        while (TenantDomain::query()
+            ->whereIn('host', [$candidate, "{$candidate}.{$suffix}"])
+            ->exists()) {
+            $candidate = "{$base}-{$counter}";
+            $counter++;
+        }
+
+        return $candidate;
     }
 
     protected function resolvedDomainHosts(array $validated, ?TenantPlanApplication $application = null): array

@@ -160,6 +160,10 @@ Artisan::command('local:deploy-live {--target=} {--tenant=*} {--skip-migrate} {-
         return self::FAILURE;
     }
 
+    if (! $runInTarget([$phpBinary, 'artisan', 'view:clear'], 'Laravel view cache clear')) {
+        return self::FAILURE;
+    }
+
     if (! $this->option('skip-migrate')) {
         if (! $runInTarget([$phpBinary, 'artisan', 'migrate', '--force'], 'Central migration')) {
             return self::FAILURE;

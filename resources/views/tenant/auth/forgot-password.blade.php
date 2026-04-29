@@ -7,7 +7,7 @@
         : config('app.name', 'University Practicum');
     $systemLogo = filled($tenantBranding['logo_path'] ?? null)
         ? asset($tenantBranding['logo_path'])
-        : asset('images/logos/logo.jpg');
+        : asset('images/logos/logo.jpeg');
 @endphp
 
 @extends('layouts.tenant')

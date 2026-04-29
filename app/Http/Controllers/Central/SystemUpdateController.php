@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Central;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SystemReleaseRequest;
 use App\Models\SystemRelease;
 use App\Services\GithubReleaseManager;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Throwable;
 
@@ -58,11 +58,9 @@ class SystemUpdateController extends Controller
             ->with('status', "{$synced} GitHub tag(s) were synced into the release catalog.");
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(SystemReleaseRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'notes' => ['nullable', 'string', 'max:5000'],
-        ]);
+        $validated = $request->validated();
 
         try {
             $release = $this->githubReleaseManager->createAutomaticTag($validated['notes'] ?? null);

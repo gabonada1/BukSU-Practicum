@@ -104,15 +104,17 @@ When Bukidnon State University Administration registers a new university portal 
 
 | University Portal | Code | License Tier | Approved Domains | Database | Status |
 | --- | --- | --- | --- | --- | --- |
-| Bukidnon State University | BSU | PREMIUM | univ, bsu.localhost, bsu.lvh.me, ustp.lvh.me | buksu_bukidnon_state_university | Active |
+| Central Mindanao University | CMU | PREMIUM | buksu, buksu.localhost | 600842e5adb7d60eb8cef36c | Active |
 | College of Arts & Sciences | CAS | PREMIUM | arts-sciences.localhost | buksu_college_of_arts_and_sciences | Active |
-| College of Business | COLLEG | PRO | cob.lvh.me, cob, colleg.lvh.me | buksu_college_of_business | Active |
-| College of Business | COB | PREMIUM | business.localhost | buksu_college_of_business | Active |
+| College of Business | COB | PREMIUM | business.localhost, cob, cob.localhost, cob.lvh.me | buksu_college_of_business | Active |
 | College of Education | COED | PREMIUM | education.localhost | buksu_college_of_education | Active |
-| College of Nursing | CON | PREMIUM | nursing, nursing.localhost, con.lvh.me, nursing.lvh.me | buksu_college_of_nursing | Active |
+| College of Nursing | CON | PREMIUM | nursing.localhost | buksu_college_of_nursing | Active |
 | College of Public Administration | CPA | PREMIUM | public-admin.localhost | buksu_college_of_public_administration | Active |
-| College of Technologies | COT | PREMIUM | cot, technology.localhost, cot.lvh.me | buksu_college_of_technologies | Active |
-| NEMSU | N | PREMIUM | nemsu, nemsu.localhost | 18a0211aa63774306acaf2ae | Active |
+| College of Technologies | COT | PREMIUM | cot.lvh.me, technology.localhost, cot.localhost | buksu_college_of_technologies | Active |
+| COTSU | C | PREMIUM | cots, cotsu.localhost | f61a17b454f8b96285452636 | Active |
+| NEMSU | N | PREMIUM | nemsu, nemsu.localhost | 0a580ba3fc7ba0156ec952cd | Active |
+| USTP | U | PREMIUM | ustp.localhost | 901d3f52b1d68a2c9e083925 | Active |
+| USTP | U | PREMIUM | ust, ust.localhost | d2b2b6948eb5bf32c9f70bc8 | Active |
 
 ## 8. Seeded Local Credentials
 
