@@ -31,6 +31,16 @@
             'copy' => 'Handle forms, logs, evaluations, and completion tracking with role-based access.',
         ],
     ];
+    $planCtas = [
+        'basic' => 'Start with Basic',
+        'pro' => 'Choose Pro',
+        'premium' => 'Go Premium',
+    ];
+    $planBadges = [
+        'basic' => 'Starter',
+        'pro' => 'Most practical',
+        'premium' => 'Full access',
+    ];
 @endphp
 
 @extends('layouts.central')
@@ -40,10 +50,10 @@
         <section class="landing-hero landing-hero-enhanced">
             <div class="landing-stack landing-hero-copy">
                 <span class="app-section-kicker">University Practicum Platform</span>
-                <h1>Launch a practicum portal your coordinators, students, and supervisors can actually enjoy using.</h1>
+                <h1>One OJT workspace for applications, documents, hours, and evaluations.</h1>
                 <p>
-                    Replace scattered approvals, manual tracking, and fragmented submissions with one polished college workspace
-                    for applications, requirements, deployment, and OJT monitoring.
+                    Give every college its own secure portal where coordinators can approve placements, students can submit
+                    requirements, and supervisors can keep progress visible from deployment to completion.
                 </p>
 
                 <div class="hero-actions">
@@ -59,6 +69,15 @@
             </div>
 
             <div class="landing-hero-visual landing-hero-panel">
+                <div class="landing-orbit-card">
+                    <div class="landing-orbit-center">
+                        <img src="{{ $systemLogo }}" alt="Bukidnon State University Logo">
+                    </div>
+                    <span class="orbit-node orbit-node-a">Students</span>
+                    <span class="orbit-node orbit-node-b">Coordinators</span>
+                    <span class="orbit-node orbit-node-c">Supervisors</span>
+                    <span class="orbit-node orbit-node-d">Companies</span>
+                </div>
                 <article class="hero-stat hero-stat-primary">
                     <span>Active Tenants</span>
                     <strong>{{ $stats['active_tenants'] }}</strong>
@@ -134,24 +153,44 @@
             </article>
         </section>
 
-        <section class="plan-grid landing-plan-grid">
-            @foreach ($plans as $plan)
-                <article class="plan-card landing-plan-card">
-                    <div class="section-header">
+        <section class="section-card landing-pricing-card" id="plans">
+            <div class="section-header landing-pricing-header">
+                <div>
+                    <span class="mini-kicker">Plans</span>
+                    <h2>Pick the access level that matches your practicum operation</h2>
+                    <p>Each plan includes a tenant workspace, guided onboarding, and the workflows needed to run university OJT from one place.</p>
+                </div>
+            </div>
+
+            <div class="plan-grid landing-plan-grid">
+                @foreach ($plans as $planKey => $plan)
+                    <article class="plan-card landing-plan-card landing-plan-card-{{ $planKey }}">
+                        <div class="landing-plan-top">
+                            <span class="plan-badge">{{ $planBadges[$planKey] ?? 'Plan' }}</span>
+                            <span class="plan-price">PHP {{ number_format($plan['amount'] / 100, 2) }}</span>
+                        </div>
                         <div>
                             <h2>{{ $plan['label'] }}</h2>
                             <p>{{ $plan['summary'] }}</p>
                         </div>
-                        <span class="plan-price">PHP {{ number_format($plan['amount'] / 100, 2) }}</span>
-                    </div>
 
-                    <ul class="clean-list">
-                        @foreach ($plan['features'] as $feature)
-                            <li>{{ $feature }}</li>
-                        @endforeach
-                    </ul>
-                </article>
-            @endforeach
+                        <div class="plan-fit">
+                            <strong>{{ $plan['student_limit'] ?? 'Flexible student capacity' }}</strong>
+                            <span>{{ $plan['best_for'] ?? 'Designed for university practicum teams.' }}</span>
+                        </div>
+
+                        <ul class="clean-list landing-plan-feature-list">
+                            @foreach ($plan['features'] as $feature)
+                                <li>{{ $feature }}</li>
+                            @endforeach
+                        </ul>
+
+                        <button type="button" class="button landing-plan-select-button" data-landing-modal-open data-plan-choice="{{ $planKey }}">
+                            {{ $planCtas[$planKey] ?? 'Apply for this plan' }}
+                        </button>
+                    </article>
+                @endforeach
+            </div>
         </section>
 
         <article class="section-card landing-benefits-card">
@@ -163,9 +202,9 @@
             </div>
 
             <div class="benefit-grid">
-                @foreach ($benefits as $benefit)
+                @foreach ($benefits as $index => $benefit)
                     <article class="benefit-card">
-                        <h3>Built for real practicum operations</h3>
+                        <h3>{{ ['Clean tenant records', 'Role-based portals', 'Complete OJT workflow', 'Controlled rollout'][$index] ?? 'Practicum operations' }}</h3>
                         <p>{{ $benefit }}</p>
                     </article>
                 @endforeach
@@ -284,7 +323,16 @@
             };
 
             document.querySelectorAll('[data-landing-modal-open]').forEach(function (trigger) {
-                trigger.addEventListener('click', openModal);
+                trigger.addEventListener('click', function () {
+                    const planChoice = trigger.getAttribute('data-plan-choice');
+                    const planSelect = modal.querySelector('select[name="selected_plan"]');
+
+                    if (planChoice && planSelect) {
+                        planSelect.value = planChoice;
+                    }
+
+                    openModal();
+                });
             });
 
             document.querySelectorAll('[data-landing-modal-close]').forEach(function (trigger) {

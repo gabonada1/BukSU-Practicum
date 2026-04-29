@@ -139,7 +139,7 @@
                         </div>
 
                         <div class="app-sidebar-footer">
-                            <div class="app-meta-card" style="display: grid;">
+                            <div class="app-meta-card app-version-card">
                                 <strong>Current Version</strong>
                                 <span>{{ $tenantCurrentVersion }}</span>
                             </div>
