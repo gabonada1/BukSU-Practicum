@@ -34,6 +34,7 @@ class SystemUpdateService
     protected const EXCLUDED_RELEASE_PATHS = [
         '.env',
         '.git',
+        'artisan',
         'bootstrap/cache',
         'node_modules',
         'storage',
@@ -47,7 +48,6 @@ class SystemUpdateService
         'database',
         'resources',
         'routes',
-        'artisan',
         'composer.json',
         'composer.lock',
         'package.json',
