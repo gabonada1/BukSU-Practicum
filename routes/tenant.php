@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Tenant\CourseController;
 use App\Http\Controllers\Tenant\InternshipApplicationController;
+use App\Http\Controllers\Tenant\ModuleController;
 use App\Http\Controllers\Tenant\OjtHourLogController;
 use App\Http\Controllers\Tenant\PartnerCompanyController;
 use App\Http\Controllers\Tenant\StudentController;
@@ -75,9 +76,13 @@ $registerTenantRoutes = function (string $namePrefix) use ($loginRoles): void {
         Route::get('/admin/rbac', [TenantRbacController::class, 'index'])->name("{$namePrefix}admin.rbac.index");
         Route::post('/admin/rbac', [TenantRbacController::class, 'update'])->name("{$namePrefix}admin.rbac.update");
         Route::post('/admin/rbac/reset', [TenantRbacController::class, 'reset'])->name("{$namePrefix}admin.rbac.reset");
-        Route::post('/courses', [CourseController::class, 'store'])->name("{$namePrefix}courses.store");
+Route::post('/courses', [CourseController::class, 'store'])->name("{$namePrefix}courses.store");
         Route::patch('/courses/{course}', [CourseController::class, 'update'])->name("{$namePrefix}courses.update");
         Route::delete('/courses/{course}', [CourseController::class, 'destroy'])->name("{$namePrefix}courses.destroy");
+        Route::get('/modules', [ModuleController::class, 'index'])->name("{$namePrefix}modules.index");
+        Route::post('/modules', [ModuleController::class, 'store'])->name("{$namePrefix}modules.store");
+        Route::patch('/modules/{module}', [ModuleController::class, 'update'])->name("{$namePrefix}modules.update");
+        Route::delete('/modules/{module}', [ModuleController::class, 'destroy'])->name("{$namePrefix}modules.destroy");
         Route::get('/admin/dashboard', TenantDashboardController::class)->name("{$namePrefix}admin.dashboard");
         Route::post('/admin/companies', [PartnerCompanyController::class, 'store'])->name("{$namePrefix}admin.companies.store");
         Route::patch('/admin/companies/{company}', [PartnerCompanyController::class, 'update'])->name("{$namePrefix}admin.companies.update");
